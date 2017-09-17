@@ -3,11 +3,10 @@
 #include <mem.h>
 #include "mmemory.h"
 #include "paging.h"
+#include "tests/unit_tests.h"
 
 int main() {
-    printf("Hello, World!\n");
-
-    _init(4, 8);
+    run_init_tests();
 
     return 0;
 }

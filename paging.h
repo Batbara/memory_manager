@@ -3,6 +3,8 @@
 
 #include "mmemory.h"
 #define MAX_POOL_SIZE 32768
+#define MAX_NUM_OF_PAGES 100
+#define MAX_PAGE_SIZE 1024
 #define ADDRESS_CAPACITY 16
 #define BLOCK_SIZE 2
 
@@ -26,4 +28,9 @@ struct page {
     struct block *firstBlock;
     int pageNum;
 };
+struct userInput {
+    int n;
+    int szPage;
+};
+struct userInput *input;
 #endif //MEMORY_MANAGER_PAGING_H

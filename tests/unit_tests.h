@@ -6,4 +6,6 @@
 #define MEMORY_MANAGER_UNIT_TESTS_H
 void _init_test(int testNum, int n, int szPage, int resultCode);
 void run_init_tests();
+void run_malloc_tests();
+void _malloc_test(int testNum, VA *ptr, size_t szBlock, int resultCode);
 #endif //MEMORY_MANAGER_UNIT_TESTS_H

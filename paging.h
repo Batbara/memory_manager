@@ -3,7 +3,7 @@
 
 #include "mmemory.h"
 #define MAX_POOL_SIZE 32768
-#define MAX_NUM_OF_PAGES 100
+#define MAX_NUM_OF_PAGES 32
 #define MAX_PAGE_SIZE 1024
 #define ADDRESS_CAPACITY 16
 #define BLOCK_SIZE 2
@@ -20,8 +20,7 @@ struct block {
     char isUsed;
 };
 struct pageInfo {
-    int pageOffset;
-    char isUsed;
+    int firstBlockOffset;
     char isAvailable; // 1 - страница в оперативной памяти; 0 - страница выгружена на диск
 };
 struct page {
@@ -33,4 +32,7 @@ struct userInput {
     int szPage;
 };
 struct userInput *input;
+struct block *pool;
+struct page *virtualPages;
+struct pageInfo *table;
 #endif //MEMORY_MANAGER_PAGING_H

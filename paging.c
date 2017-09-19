@@ -170,17 +170,27 @@ VA getVAoffset(VA address) {
     return addressOffset;
 }
 
+int convertToBlockAddr(VA addr) {
+    int addressOffset = convertToDecimal(getVAoffset(addr));
+    int pageNumber = retrievePageNumberFromVA(addr);
+
+    int blockAddr = table[pageNumber].firstBlockOffset;
+    blockAddr += addressOffset / BLOCK_SIZE;
+    return blockAddr;
+}
+
 VA *getVAofBlocksToAlloc(int blockSize, VA *pagingVApool, int poolSize) {
     int blocksNum = (int) ceil((double) blockSize / BLOCK_SIZE);
     VA *blockAddrPool = malloc(blocksNum * sizeof(VA));
     int prevAddr = -1, poolCount = 0;
     for (int count = 0; count < poolSize; count++) {
         VA currentVA = pagingVApool[count];
-        int addressOffset = convertToDecimal(getVAoffset(currentVA));
-        int pageNumber = retrievePageNumberFromVA(currentVA);
-
-        int blockAddr = table[pageNumber].firstBlockOffset;
-        blockAddr += addressOffset / BLOCK_SIZE;
+//        int addressOffset = convertToDecimal(getVAoffset(currentVA));
+//        int pageNumber = retrievePageNumberFromVA(currentVA);
+//
+//        int blockAddr = table[pageNumber].firstBlockOffset;
+//        blockAddr += addressOffset / BLOCK_SIZE;
+        int blockAddr = convertToBlockAddr(currentVA);
 
         if (blockAddr == prevAddr)
             continue;
@@ -199,9 +209,6 @@ VA *addressMapping(VA *ptr, size_t blockSize) {
     VA *addressesToAlloc = getVAofBlocksToAlloc(blockSize, VApool, blockSize);
     return addressesToAlloc;
 }
-VA addressConversion(VA addr){
-
-}
 
 void checkUsedBlocks() {
     struct block *current = pool;
@@ -215,9 +222,10 @@ void checkUsedBlocks() {
 
 int freeBlock(VA ptr) {
     struct block *current = pool;
+
+    VA blockAddress = convertToVA(convertToBlockAddr(ptr));
     while (current->next != NULL) {
-        VA blockAddress = current->address;
-        if (strcmp(blockAddress, ptr) == 0) {
+        if (strcmp(blockAddress, current->address) == 0) {
             if (current->isUsed == '0')
                 return UNKNOWN_MISTAKE;
             current->isUsed = '0';

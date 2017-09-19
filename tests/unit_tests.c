@@ -19,6 +19,14 @@ void _malloc_test(int testNum, VA *ptr, size_t szBlock, int resultCode){
     else
         printf("test failed\n");
 }
+void _free_test(int testNum, VA ptr, int resultCode){
+    printf("\tTest %d: ",testNum);
+    int returnValue = _free(ptr);
+    if(returnValue==resultCode)
+        printf("test passed!\n");
+    else
+        printf("test failed\n");
+}
 void freeGlobalVars(){
     free(pool);
     free(table);
@@ -44,6 +52,7 @@ void run_init_tests(){
 void run_malloc_tests(){
     // начальные условия: 10 стр, размер 4
     _init(10,4);
+    printf("Run _malloc tests\n");
     VA addr="00000000000000000";
     _malloc_test(0,&addr,16,SUCCESS);
 
@@ -53,5 +62,31 @@ void run_malloc_tests(){
     addr="00000000000011110";
     _malloc_test(2,&addr,16,MEMORY_LACK);
 
+    addr="00000000000000001";
+    _malloc_test(3,&addr,16,UNKNOWN_MISTAKE); //попытка выделить уже занятый адрес
+
+    addr="00000000000010010"; //18
+    _malloc_test(4, &addr,5,SUCCESS);
+
+}
+void run_free_tests(){
+//    freeAll();
+   // freeGlobalVars();
+    //начальные условия
+    _init(10,4);
+    VA addr="00000000000000000";
+    _malloc(&addr,16);
+
+    _free_test(0,addr,SUCCESS);
+    _free_test(1,addr,UNKNOWN_MISTAKE);
+
+    VA incorrectAddr="00lol0kek00000";
+    _free_test(2,incorrectAddr,WRONG_ARGUMENTS);
+
+    addr="00000000000000100";
+    _free_test(3,addr,SUCCESS);
+
+   addr="00000000000011000";
+    _free_test(4,addr,UNKNOWN_MISTAKE);
 }
 

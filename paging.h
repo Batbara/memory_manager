@@ -35,4 +35,6 @@ struct userInput *input;
 struct block *pool;
 struct page *virtualPages;
 struct pageInfo *table;
+void freeAll();
 #endif //MEMORY_MANAGER_PAGING_H
+

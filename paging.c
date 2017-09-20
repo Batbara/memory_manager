@@ -117,6 +117,8 @@ struct pageInfo createPageInfo(int pageOffset) {
 }
 
 
+int isBufferValid(void *pVoid);
+
 int isAddressValid(VA ptr) {
     if (strlen(ptr) != ADDRESS_CAPACITY + 1)
         return WRONG_ARGUMENTS;
@@ -125,7 +127,7 @@ int isAddressValid(VA ptr) {
         if (value != '0' && value != '1')
             return WRONG_ARGUMENTS;
     }
-    if(convertToDecimal(ptr)>input->n*input->szPage){
+    if (convertToDecimal(ptr) > input->n * input->szPage) {
         return WRONG_ARGUMENTS;
     }
     return SUCCESS;
@@ -220,18 +222,30 @@ void checkUsedBlocks() {
     }
 }
 
-int freeBlock(VA ptr) {
-    struct block *current = pool;
-
+VA findBlockAddr(VA ptr) {
     VA blockAddress = convertToVA(convertToBlockAddr(ptr));
+    return blockAddress;
+}
+
+struct block *findBlockNode(VA blockAddr) {
+    struct block *current = pool;
     while (current->next != NULL) {
-        if (strcmp(blockAddress, current->address) == 0) {
-            if (current->isUsed == '0')
-                return UNKNOWN_MISTAKE;
-            current->isUsed = '0';
+        if (strcmp(blockAddr, current->address) == 0) {
+            return current;
         }
         current = current->next;
     }
+    return NULL;
+}
+
+int freeBlock(VA addr) {
+
+    struct block *blockToFree = findBlockNode(addr);
+    if (blockToFree->isUsed == '0')
+        return UNKNOWN_MISTAKE;
+    blockToFree->isUsed = '0';
+    if(blockToFree->data!=NULL)
+     free(blockToFree->data);
     return SUCCESS;
 }
 
@@ -242,6 +256,15 @@ void freeAll() {
         current->isUsed = '0';
         current = current->next;
     }
+}
+
+int writeToBlock(VA blockAddr, void *pBuffer) {
+    struct block *blockToWrite = findBlockNode(blockAddr);
+    if (blockToWrite == NULL || blockToWrite->isUsed=='0' || blockToWrite->data!=NULL)
+        return UNKNOWN_MISTAKE;
+    blockToWrite->data = pBuffer;
+    blockToWrite->isUsed='1';
+    return SUCCESS;
 }
 
 int _init(int n, int szPage) {
@@ -340,10 +363,27 @@ int _free(VA ptr) {
      * 2) если блок уже свободен, возвращаем UNKNOWN_MISTAKE
      * 3) если блок занят, устанавливаем флаг 'свободен'
      */
-    int freeRes = freeBlock(ptr);
+    VA blockAddr = findBlockAddr(ptr);
+    int freeRes = freeBlock(blockAddr);
     if (freeRes == UNKNOWN_MISTAKE)
         return UNKNOWN_MISTAKE;
     return SUCCESS;
 
+}
 
+int _write(VA ptr, void *pBuffer, size_t szBuffer) {
+    if (isAddressValid(ptr) == WRONG_ARGUMENTS || pBuffer == NULL)
+        return WRONG_ARGUMENTS;
+    if (szBuffer > BLOCK_SIZE) {
+        return MEMORY_LACK;
+    }
+    /*
+     * Алгоритм:
+     * 0) проверяем корректность парам
+     * 1) определяем блок с таким адресом
+     * 2) если он не замаллочен или есть данные - неизвестная ошибка
+     * 3) если все ок, пишем в блок
+     */
+    VA blockAddr = findBlockAddr(ptr);
+    return writeToBlock(blockAddr, pBuffer);
 }

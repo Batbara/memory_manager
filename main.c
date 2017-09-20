@@ -18,6 +18,7 @@ int main() {
     else
         printf("\nwrong args");*/
     //run_malloc_tests();
-    run_free_tests();
+   // run_free_tests();
+    run_write_tests();
     return 0;
 }

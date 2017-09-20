@@ -40,6 +40,14 @@ void _write_test(int testNum, VA ptr, void *buffer, size_t size, int resultCode)
     else
         printf("test failed\n");
 }
+void _read_test(int testNum, VA ptr, void *buffer, size_t size, int resultCode) {
+    printf("\tTest %d: ", testNum);
+    int returnValue = _read(ptr, buffer, size);
+    if (returnValue == resultCode)
+        printf("test passed!\n");
+    else
+        printf("test failed\n");
+}
 
 void freeGlobalVars() {
     free(pool);
@@ -121,5 +129,18 @@ void run_write_tests() {
 
     VA faultyAddr = "lolkekcheburek";
     _write_test(4, faultyAddr, "tt", 2, WRONG_ARGUMENTS);
+}
+
+void run_read_tests(){
+    _init(10, 4);
+    VA addr = "00000000000000000";
+    _malloc(&addr, 16);
+    _write(addr, "os", 2);
+    char* ptr = calloc(2,2*sizeof(char));
+    _read_test(0,addr,ptr,2,SUCCESS);
+
+    for( int i =0; i<2; i++) {
+        printf("%c", ptr[i]);
+    }
 }
 

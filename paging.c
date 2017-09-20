@@ -187,11 +187,6 @@ VA *getVAofBlocksToAlloc(int blockSize, VA *pagingVApool, int poolSize) {
     int prevAddr = -1, poolCount = 0;
     for (int count = 0; count < poolSize; count++) {
         VA currentVA = pagingVApool[count];
-//        int addressOffset = convertToDecimal(getVAoffset(currentVA));
-//        int pageNumber = retrievePageNumberFromVA(currentVA);
-//
-//        int blockAddr = table[pageNumber].firstBlockOffset;
-//        blockAddr += addressOffset / BLOCK_SIZE;
         int blockAddr = convertToBlockAddr(currentVA);
 
         if (blockAddr == prevAddr)
@@ -266,7 +261,14 @@ int writeToBlock(VA blockAddr, void *pBuffer) {
     blockToWrite->isUsed='1';
     return SUCCESS;
 }
+int readFromBlock(VA blockAddr, void *pBuffer, size_t size){
+    struct block *blockToRead = findBlockNode(blockAddr);
+    if (blockToRead == NULL || blockToRead->isUsed=='0' || blockToRead->data==NULL)
+        return UNKNOWN_MISTAKE;
 
+   memcpy(pBuffer,blockToRead->data,size);
+    return SUCCESS;
+}
 int _init(int n, int szPage) {
     if (n < 1 || n > MAX_NUM_OF_PAGES || isSzPageValid(szPage) != SUCCESS)
         return WRONG_ARGUMENTS;
@@ -372,7 +374,7 @@ int _free(VA ptr) {
 }
 
 int _write(VA ptr, void *pBuffer, size_t szBuffer) {
-    if (isAddressValid(ptr) == WRONG_ARGUMENTS || pBuffer == NULL)
+    if (isAddressValid(ptr) == WRONG_ARGUMENTS || szBuffer <= 0)
         return WRONG_ARGUMENTS;
     if (szBuffer > BLOCK_SIZE) {
         return MEMORY_LACK;
@@ -386,4 +388,13 @@ int _write(VA ptr, void *pBuffer, size_t szBuffer) {
      */
     VA blockAddr = findBlockAddr(ptr);
     return writeToBlock(blockAddr, pBuffer);
+}
+int _read(VA ptr, void *pBuffer, size_t szBuffer){
+    if (isAddressValid(ptr) == WRONG_ARGUMENTS || szBuffer <= 0)
+        return WRONG_ARGUMENTS;
+    if (szBuffer > BLOCK_SIZE) {
+        return MEMORY_LACK;
+    }
+    VA blockAddr = findBlockAddr(ptr);
+    return readFromBlock(blockAddr, pBuffer, szBuffer);
 }

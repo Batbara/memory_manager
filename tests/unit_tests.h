@@ -1,6 +1,3 @@
-//
-// Created by Barbarossa on 17.09.2017.
-//
 
 #ifndef MEMORY_MANAGER_UNIT_TESTS_H
 #define MEMORY_MANAGER_UNIT_TESTS_H
@@ -14,4 +11,5 @@ void run_malloc_tests();
 void run_free_tests();
 void run_write_tests();
 void run_read_tests();
+void freeGlobalVars();
 #endif //MEMORY_MANAGER_UNIT_TESTS_H

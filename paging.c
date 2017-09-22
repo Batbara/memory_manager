@@ -1,20 +1,13 @@
 #include "mmemory.h"
 #include "paging.h"
 
-#include <stdio.h>
 #include <malloc.h>
 #include <mem.h>
 #include <math.h>
-#include "mmemory.h"
-#include "paging.h"
 
-void printVA(VA address) {
-    for (int bit = 0; bit < strlen(address); bit++) {
-        printf("%c", address[bit]);
-    }
-    printf("\n");
-}
-
+/*
+ * Добавление блока в связный список
+ */
 int pushBlock(struct block **head, VA address, int blockSize) {
     struct block *current = *head;
 
@@ -37,6 +30,9 @@ int pushBlock(struct block **head, VA address, int blockSize) {
     return SUCCESS;
 }
 
+/*
+ * Получние ссылки на блок по исходному виртуальному адресу
+ */
 struct block *getBlockByAddress(struct block **head, VA address) {
     struct block *current = *head;
     while (current != NULL) {
@@ -48,9 +44,11 @@ struct block *getBlockByAddress(struct block **head, VA address) {
     return NULL;
 }
 
+/*
+ * Резервирование блоков - отметка флага isUsed в 1
+ */
 int allocateBlocks(struct block **firstBlock, VA *addressesToAlloc, int size) {
     struct block *current = *firstBlock;
-    // printf("locating blocks");
     while (current->next != NULL) {
         VA blockAddress = current->address;
         for (int count = 0; count < size; count++) {
@@ -67,6 +65,9 @@ int allocateBlocks(struct block **firstBlock, VA *addressesToAlloc, int size) {
     return SUCCESS;
 }
 
+/*
+ * Преобразование десятичного номера блока в двоичный адрес
+ */
 VA convertToVA(int blockNumber) {
     VA address = calloc(ADDRESS_CAPACITY, sizeof(char) * ADDRESS_CAPACITY);
 
@@ -83,6 +84,9 @@ VA convertToVA(int blockNumber) {
     return address;
 }
 
+/*
+ * Преборазование виртуального адреса в десятичнй номер
+ */
 int convertToDecimal(VA addressToConvert) {
     int decimal = 0;
     for (int bit = strlen(addressToConvert) - 1, exp = 0; bit >= 0; bit--, exp++) {
@@ -92,15 +96,14 @@ int convertToDecimal(VA addressToConvert) {
     return decimal;
 }
 
+/*
+ * Создание виртуальной страницы
+ */
 struct page createPage(int pageOffset, struct block **memoryPool, int pageNum) {
-    // printf("\nPage offset is %d", firstBlockOffset);
+
     struct page *newPage = (struct page *) malloc(sizeof(struct page));
 
     VA firstBlockAddress = convertToVA(pageOffset);
-//    printf("\nFrist block address is: ");
-//    for (int bit = 0; bit < strlen(firstBlockAddress); bit++) {
-//        printf("%c", firstBlockAddress[bit]);
-//    }
     struct block *firstBlock = getBlockByAddress(memoryPool, firstBlockAddress);
 
     newPage->firstBlock = firstBlock;
@@ -109,6 +112,9 @@ struct page createPage(int pageOffset, struct block **memoryPool, int pageNum) {
     return *newPage;
 }
 
+/*
+ * Создание "строки" в таблице страниц
+ */
 struct pageInfo createPageInfo(int pageOffset) {
     struct pageInfo *info = (struct pageInfo *) malloc(sizeof(struct pageInfo));
     info->firstBlockOffset = pageOffset;
@@ -116,9 +122,9 @@ struct pageInfo createPageInfo(int pageOffset) {
     return *info;
 }
 
-
-int isBufferValid(void *pVoid);
-
+/*
+ * Проверка корректности виртуального адреса
+ */
 int isAddressValid(VA ptr) {
     if (strlen(ptr) != ADDRESS_CAPACITY + 1)
         return WRONG_ARGUMENTS;
@@ -133,6 +139,9 @@ int isAddressValid(VA ptr) {
     return SUCCESS;
 }
 
+/*
+ * Проверка рамера страницы
+ */
 int isSzPageValid(int szPage) {
     if (szPage <= 0 || szPage > MAX_PAGE_SIZE)
         return WRONG_ARGUMENTS;
@@ -142,6 +151,10 @@ int isSzPageValid(int szPage) {
     else return WRONG_ARGUMENTS;
 }
 
+/*
+ * Получение пула адресов блоков, которые
+ * находятся в интервале [firstVA, lastVA] виртуальных адресов
+ */
 VA *getVApool(VA firstVA, VA lastVA) {
     int size = convertToDecimal(lastVA) - convertToDecimal(firstVA);
     VA *VApool = malloc(size * sizeof(VA));
@@ -151,6 +164,11 @@ VA *getVApool(VA firstVA, VA lastVA) {
     return VApool;
 }
 
+/*
+ * Получение номера виртуальной страницы из виртуального адреса
+ * путем отбрасывания exponent младших битов, где exponent - степень
+ * размера страницы
+ */
 int retrievePageNumberFromVA(VA address) {
     int szPage = input->szPage;
     int exponent = (int) (log2((double) szPage));
@@ -162,7 +180,9 @@ int retrievePageNumberFromVA(VA address) {
     return pageNum;
 }
 
-
+/*
+ * Получение смещения виртуального адреса
+ */
 VA getVAoffset(VA address) {
     int szPage = input->szPage;
     size_t exponent = (size_t) (log2((double) szPage));
@@ -172,6 +192,9 @@ VA getVAoffset(VA address) {
     return addressOffset;
 }
 
+/*
+ * Преобразование виртуального адреса в десятичный адрес блока
+ */
 int convertToBlockAddr(VA addr) {
     int addressOffset = convertToDecimal(getVAoffset(addr));
     int pageNumber = retrievePageNumberFromVA(addr);
@@ -181,6 +204,9 @@ int convertToBlockAddr(VA addr) {
     return blockAddr;
 }
 
+/*
+ * Получение виртуальных адресов блоков, которые выделяются в памяти
+ */
 VA *getVAofBlocksToAlloc(int blockSize, VA *pagingVApool, int poolSize) {
     int blocksNum = (int) ceil((double) blockSize / BLOCK_SIZE);
     VA *blockAddrPool = malloc(blocksNum * sizeof(VA));
@@ -207,16 +233,6 @@ VA *addressMapping(VA *ptr, size_t blockSize) {
     return addressesToAlloc;
 }
 
-void checkUsedBlocks() {
-    struct block *current = pool;
-
-    while (current->next != NULL) {
-        if (current->isUsed == '1')
-            printf("\nused block is:%d", convertToDecimal(current->address));
-        current = current->next;
-    }
-}
-
 VA findBlockAddr(VA ptr) {
     VA blockAddress = convertToVA(convertToBlockAddr(ptr));
     return blockAddress;
@@ -239,46 +255,35 @@ int freeBlock(VA addr) {
     if (blockToFree->isUsed == '0')
         return UNKNOWN_MISTAKE;
     blockToFree->isUsed = '0';
-    if(blockToFree->data!=NULL)
-     free(blockToFree->data);
+    if (blockToFree->data != NULL)
+        free(blockToFree->data);
     return SUCCESS;
-}
-
-void freeAll() {
-    struct block *current = pool;
-    while (current->next != NULL) {
-
-        current->isUsed = '0';
-        current = current->next;
-    }
 }
 
 int writeToBlock(VA blockAddr, void *pBuffer) {
     struct block *blockToWrite = findBlockNode(blockAddr);
-    if (blockToWrite == NULL || blockToWrite->isUsed=='0' || blockToWrite->data!=NULL)
+    if (blockToWrite == NULL || blockToWrite->isUsed == '0' || blockToWrite->data != NULL)
         return UNKNOWN_MISTAKE;
     blockToWrite->data = pBuffer;
-    blockToWrite->isUsed='1';
+    blockToWrite->isUsed = '1';
     return SUCCESS;
 }
-int readFromBlock(VA blockAddr, void *pBuffer, size_t size){
+
+int readFromBlock(VA blockAddr, void *pBuffer, size_t size) {
     struct block *blockToRead = findBlockNode(blockAddr);
-    if (blockToRead == NULL || blockToRead->isUsed=='0' || blockToRead->data==NULL)
+    if (blockToRead == NULL || blockToRead->isUsed == '0' || blockToRead->data == NULL)
         return UNKNOWN_MISTAKE;
 
-   memcpy(pBuffer,blockToRead->data,size);
+    memcpy(pBuffer, blockToRead->data, size);
     return SUCCESS;
 }
+
 int _init(int n, int szPage) {
     if (n < 1 || n > MAX_NUM_OF_PAGES || isSzPageValid(szPage) != SUCCESS)
         return WRONG_ARGUMENTS;
     input = malloc(sizeof(struct userInput));
     input->n = n;
     input->szPage = szPage;
-
-    /*struct block *pool = NULL;
-    struct page *virtualPages = NULL;
-    struct pageInfo *table = NULL;*/
 
     int poolSize = n * szPage / BLOCK_SIZE;
     pool = (struct block *) malloc(poolSize * sizeof(struct block));
@@ -289,19 +294,8 @@ int _init(int n, int szPage) {
     pool->isUsed = '0';
     pool->blockSize = BLOCK_SIZE;
     pool->address = convertToVA(0);
-//    printf("Initializing pool. Number of blocks: %d\n", poolSize);
-//    printf("0 address: ");
-//    for (int bit = 0; bit < strlen(pool->address); bit++) {
-//        printf("%c", pool->address[bit]);
-//    }
-//    printf("\n");
     for (int blockCount = 1; blockCount < poolSize; blockCount++) {
-        // printf("%d address: ", blockCount);
         VA address = convertToVA(blockCount);
-        /*for (int bit = 0; bit < strlen(address); bit++) {
-            printf("%c", address[bit]);
-        }
-        printf("\n");*/
 
         int status = pushBlock(&pool, address, BLOCK_SIZE);
         if (status != SUCCESS)
@@ -314,9 +308,7 @@ int _init(int n, int szPage) {
         return UNKNOWN_MISTAKE;
 
     for (int pageNum = 0; pageNum < n; pageNum++) {
-        // int pageOffset = (int) (pageNum * log2((double) szPage));
         int pageOffset = pageNum * (szPage / BLOCK_SIZE);
-        // printf("page num is %d, offset is %d",pageNum,pageOffset);
         virtualPages[pageNum] = createPage(pageOffset, &pool, pageNum);
         table[pageNum] = createPageInfo(pageOffset);
     }
@@ -352,7 +344,6 @@ int _malloc(VA *ptr, size_t blockSize) {
     int allocationRes = allocateBlocks(&firstBlock, addressesToAlloc, blocksToAllocateNum);
     if (allocationRes != SUCCESS)
         return UNKNOWN_MISTAKE;
-    //checkUsedBlocks();
     return SUCCESS;
 }
 
@@ -389,7 +380,8 @@ int _write(VA ptr, void *pBuffer, size_t szBuffer) {
     VA blockAddr = findBlockAddr(ptr);
     return writeToBlock(blockAddr, pBuffer);
 }
-int _read(VA ptr, void *pBuffer, size_t szBuffer){
+
+int _read(VA ptr, void *pBuffer, size_t szBuffer) {
     if (isAddressValid(ptr) == WRONG_ARGUMENTS || szBuffer <= 0)
         return WRONG_ARGUMENTS;
     if (szBuffer > BLOCK_SIZE) {

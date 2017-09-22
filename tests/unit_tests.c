@@ -40,6 +40,7 @@ void _write_test(int testNum, VA ptr, void *buffer, size_t size, int resultCode)
     else
         printf("test failed\n");
 }
+
 void _read_test(int testNum, VA ptr, void *buffer, size_t size, int resultCode) {
     printf("\tTest %d: ", testNum);
     int returnValue = _read(ptr, buffer, size);
@@ -56,30 +57,29 @@ void freeGlobalVars() {
 }
 
 void run_init_tests() {
-    printf("Running _init tests:\n");
+    printf("\n--------_init tests--------\n");
     _init_test(0, 5, 32, SUCCESS);
-    // freeGlobalVars();
+    freeGlobalVars();
 
     _init_test(1, -2, 64, WRONG_ARGUMENTS);
-    //  freeGlobalVars();
+    freeGlobalVars();
 
     _init_test(2, 10, 15, WRONG_ARGUMENTS);
-    // freeGlobalVars();
+    freeGlobalVars();
 
     _init_test(3, 20, 128, SUCCESS);
-    // freeGlobalVars();
+    freeGlobalVars();
 
     _init_test(4, 100, 1025, WRONG_ARGUMENTS);
-    //  freeGlobalVars();
+    freeGlobalVars();
 }
 
 void run_malloc_tests() {
     // начальные условия: 10 стр, размер 4
     _init(10, 4);
-    printf("Run _malloc tests\n");
+    printf("\n--------_malloc tests--------\n");
     VA addr = "00000000000000000";
     _malloc_test(0, &addr, 16, SUCCESS);
-
     addr = "0065465465";
     _malloc_test(1, &addr, 4, WRONG_ARGUMENTS);
 
@@ -92,12 +92,14 @@ void run_malloc_tests() {
     addr = "00000000000010010"; //18
     _malloc_test(4, &addr, 5, SUCCESS);
 
+    freeGlobalVars();
 }
 
 void run_free_tests() {
 //    freeAll();
     // freeGlobalVars();
     //начальные условия
+    printf("\n--------_free tests--------\n");
     _init(10, 4);
     VA addr = "00000000000000000";
     _malloc(&addr, 16);
@@ -113,9 +115,11 @@ void run_free_tests() {
 
     addr = "00000000000011000";
     _free_test(4, addr, UNKNOWN_MISTAKE);
+    freeGlobalVars();
 }
 
 void run_write_tests() {
+    printf("\n--------_write tests--------\n");
     _init(10, 4);
     VA addr = "00000000000000000";
     _malloc(&addr, 16);
@@ -129,18 +133,29 @@ void run_write_tests() {
 
     VA faultyAddr = "lolkekcheburek";
     _write_test(4, faultyAddr, "tt", 2, WRONG_ARGUMENTS);
+    freeGlobalVars();
 }
 
-void run_read_tests(){
+void run_read_tests() {
+    printf("\n--------_read tests--------\n");
     _init(10, 4);
     VA addr = "00000000000000000";
     _malloc(&addr, 16);
     _write(addr, "os", 2);
-    char* ptr = calloc(2,2*sizeof(char));
-    _read_test(0,addr,ptr,2,SUCCESS);
+    char *ptr = calloc(2, 2 * sizeof(char));
 
-    for( int i =0; i<2; i++) {
-        printf("%c", ptr[i]);
-    }
+    _read_test(0, addr, ptr, 2, SUCCESS);
+    _read_test(1, addr, ptr, 4, MEMORY_LACK);
+
+    VA faultyAddr = "it is not an address!!";
+    _read_test(2, faultyAddr, ptr, 2, WRONG_ARGUMENTS);
+
+    addr = "00000000000001000";
+    _write(addr, "c4", 2);
+    _read_test(3, addr, ptr, 2, SUCCESS);
+
+    addr = "00000000000011000";
+    _read_test(4, addr, ptr, 2, UNKNOWN_MISTAKE);
+    freeGlobalVars();
 }
 

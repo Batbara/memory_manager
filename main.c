@@ -6,7 +6,7 @@
 #include "tests/unit_tests.h"
 
 int main() {
-    //run_init_tests();
+    run_init_tests();
   /*  _init(10, 4);
     VA ptr = "00000000000000010";
     _malloc(&ptr, 5);
@@ -17,9 +17,9 @@ int main() {
         printf("\nunknown mistake!");
     else
         printf("\nwrong args");*/
-    //run_malloc_tests();
-   // run_free_tests();
-   // run_write_tests();
+    run_malloc_tests();
+    run_free_tests();
+    run_write_tests();
     run_read_tests();
     return 0;
 }

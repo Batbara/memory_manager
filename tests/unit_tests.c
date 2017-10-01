@@ -55,6 +55,14 @@ void freeGlobalVars() {
     free(table);
     free(virtualPages);
 }
+void printBlockUsage(){
+    struct block *current = pool;
+    printf("blocks availability:\n");
+    while(current->next!=NULL){
+        printf("%c\n",current->isUsed);
+        current=current->next;
+    }
+}
 
 void run_init_tests() {
     printf("\n--------_init tests--------\n");
@@ -89,6 +97,13 @@ void run_malloc_tests() {
     addr = "00000000000000001";
     _malloc_test(3, &addr, 16, UNKNOWN_MISTAKE); //попытка выделить уже занятый адрес
 
+//    printBlockUsage();
+//    for(int count = 0; count<25; count++) {
+//        _free(convertToVA(count));
+//    }
+//    printBlockUsage();
+//    freeGlobalVars();
+//    _init(10, 4);
     addr = "00000000000010010"; //18
     _malloc_test(4, &addr, 5, SUCCESS);
 

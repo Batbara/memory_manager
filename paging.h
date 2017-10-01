@@ -1,11 +1,12 @@
 #ifndef MEMORY_MANAGER_PAGING_H
 #define MEMORY_MANAGER_PAGING_H
 
-#include "mmemory.h"
-#define MAX_POOL_SIZE 32768
+
+#define MAX_SIZE 32768
+#define MAX_NUM_OF_PAGES_IN_RAM 16
 #define MAX_NUM_OF_PAGES 32
 #define MAX_PAGE_SIZE 1024
-#define ADDRESS_CAPACITY 16
+#define ADDRESS_CAPACITY 17
 #define BLOCK_SIZE 2
 
 #define SUCCESS 0
@@ -20,21 +21,55 @@ struct block {
     char isUsed;
 };
 struct pageInfo {
+    int addrOffset;
     int firstBlockOffset;
+    char isModified;
+    int accessCounter;
     char isAvailable; // 1 - страница в оперативной памяти; 0 - страница выгружена на диск
 };
 struct page {
+    struct page *next;
     struct block *firstBlock;
-    int pageNum;
+};
+struct diskCell {
+    struct diskCell *next;
+    struct page pageOnDisk;
+    int pageOffset;
 };
 struct userInput {
     int n;
     int szPage;
 };
-struct userInput *input;
-struct block *pool;
-struct page *virtualPages;
-struct pageInfo *table;
-void freeAll();
+ struct block *pool;
+ struct page *virtualPages;
+ struct pageInfo *table;
+ struct diskCell *memDisk;
+ struct userInput *input;
+
+VA convertToVA(int num);
+/*int convertToDecimal(VA addressToConvert);
+
+int pushPage(struct page **head, struct page *pageToPush);
+int allocateBlocks(struct block **firstBlock, VA *addressesToAlloc, int size);
+struct page *createPage(int addrOffset, struct block **memoryPool);
+struct pageInfo createPageInfo(int firstBlockOffset, int addrOffset);
+int isAddressValid(VA ptr);
+VA *getVApool(VA firstVA, VA lastVA);
+int getPageNumberFromVA(VA address);
+VA getVAoffset(VA address);
+VA findBlockAddr(VA ptr);
+VA *addressMapping(VA *ptr, size_t blockSize);
+int isPageAvailable(int pageNum);
+void saveInput(int n, int szPage);
+int createBlocks();
+int freeBlock(VA addr);
+int writeToBlock(VA blockAddr, void *pBuffer);
+int readFromBlock(VA blockAddr, void *pBuffer, size_t size);
+void initPool();
+int checkInitArguments(int n, int szPage);
+struct diskCell *createDiskCell(struct page thePage, int addrOffset);
+int pushDiskCell(struct diskCell **head, struct diskCell *cellToPush);
+int loadPageToMem(int pageNum);
+struct page *findPage(int pageNum);*/
 #endif //MEMORY_MANAGER_PAGING_H
 

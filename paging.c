@@ -24,7 +24,6 @@ int pushBlock(struct block **head, VA address, int blockSize) {
     nextBlock->address = address;
     nextBlock->data = NULL;
     nextBlock->isUsed = '0';
-    nextBlock->blockSize = blockSize;
     nextBlock->next = NULL;
 
     current->next = nextBlock;
@@ -104,47 +103,47 @@ struct diskCell *findDiskCell(struct diskCell **head, int pageOffset) {
 }
 
 void deleteDiskCell(struct diskCell **head, int pageOffset) {
-    struct diskCell *temp = *head;
+    struct diskCell *current = *head;
     struct diskCell *prev;
 
-    if (temp != NULL && temp->pageOffset == pageOffset) {
-        *head = temp->next;
-        free(temp);
+    if (current != NULL && current->pageOffset == pageOffset) {
+        *head = current->next;
+        free(current);
         return;
     }
 
-    while (temp != NULL && temp->pageOffset != pageOffset) {
-        prev = temp;
-        temp = temp->next;
+    while (current != NULL && current->pageOffset != pageOffset) {
+        prev = current;
+        current = current->next;
     }
 
-    if (temp == NULL) return;
+    if (current == NULL) return;
 
-    prev->next = temp->next;
+    prev->next = current->next;
 
-    free(temp);
+    free(current);
 }
 
 void deletePage(struct page **head, struct page *pageToDel) {
-    struct page *temp = *head;
+    struct page *current = *head;
     struct page *prev;
 
-    if (temp != NULL && temp == pageToDel) {
-        *head = temp->next;
-        free(temp);
+    if (current != NULL && current == pageToDel) {
+        *head = current->next;
+        free(current);
         return;
     }
 
-    while (temp != NULL && temp != pageToDel) {
-        prev = temp;
-        temp = temp->next;
+    while (current != NULL && current != pageToDel) {
+        prev = current;
+        current = current->next;
     }
 
-    if (temp == NULL) return;
+    if (current == NULL) return;
 
-    prev->next = temp->next;
+    prev->next = current->next;
 
-    free(temp);
+    free(current);
 }
 
 int allocateBlock(struct block **firstBlock, VA addrToAlloc) {
@@ -159,7 +158,7 @@ int allocateBlock(struct block **firstBlock, VA addrToAlloc) {
         }
         current = current->next;
     }
-    return SUCCESS;
+    return UNKNOWN_MISTAKE;
 }
 
 /*
@@ -205,14 +204,11 @@ struct diskCell *createDiskCell(struct page thePage, int pageOffset) {
 struct pageInfo createPageInfo(int firstBlockOffset, int pageOffset) {
     struct pageInfo *info = (struct pageInfo *) malloc(sizeof(struct pageInfo));
     info->firstBlockOffset = firstBlockOffset;
-    info->addrOffset = pageOffset;
 
     if (pageOffset > MAX_NUM_OF_PAGES_IN_RAM) {
         info->isAvailable = '0';
     } else
         info->isAvailable = '1';
-    info->isModified = '0';
-    info->accessCounter = 0;
     return *info;
 }
 
@@ -301,7 +297,6 @@ VA *addressMapping(VA *ptr, size_t blockSize) {
     int lastAddrDecimal = blockSize + convertToDecimal(*ptr);
     VA lastAddress = convertToVA(lastAddrDecimal);
     VA *VApool = getVApool(*ptr, lastAddress);
-    //   VA *addressesToAlloc = getVAofBlocksToAlloc(blockSize, VApool, blockSize);
     return VApool;
 }
 
@@ -319,35 +314,45 @@ int isPageAvailable(int pageNum) {
 
 struct page *findPage(int pageNum);
 
-struct page *findOptimalPage(int anchorNum) {
+struct page* findOptimalPage(int anchorNum) {
 
-    int optimalPageNum = 0;
-    if (anchorNum == 0)
-        if (input->n > MAX_NUM_OF_PAGES_IN_RAM)
-            optimalPageNum = MAX_NUM_OF_PAGES_IN_RAM;
-        else optimalPageNum = input->n;
-    table[optimalPageNum].isAvailable = '0';
-    printf("unloading to disk page number %d\n", optimalPageNum);
-    return findPage(optimalPageNum);
+    struct page *optimalPage;
+    int optimalPageNum;
+    do {
+        optimalPageNum = rand() % input->n + 1;
+        optimalPage = findPage(optimalPageNum);
+    } while (optimalPage == NULL || optimalPageNum == anchorNum);
+    return optimalPage;
 }
 
 void loadExtraPageToDisk(int anchorPage) {
     struct page *pageToUnload = findOptimalPage(anchorPage);
+
+    struct diskCell *cell = (struct diskCell *) malloc(sizeof(struct diskCell));
+    cell->pageOnDisk = *pageToUnload;
+    cell->pageOffset = pageToUnload->pageNum;
+    cell->next = NULL;
+    pushDiskCell(&memDisk, cell);
+
+    table[pageToUnload->pageNum].isAvailable='0';
     deletePage(&virtualPages, pageToUnload);
 }
 
 struct page *findPage(int pageNum) {
     struct page *current = virtualPages;
+    if (current->pageNum == pageNum && current->next == NULL)
+        return current;
     while (current->next != NULL) {
         if (current->pageNum == pageNum)
             return current;
         current = current->next;
     };
-    return current;
+    if (current->pageNum == pageNum)
+        return current;
+    return NULL;
 }
 
 int loadPageToMem(int pageNum) {
-    printf("loading to memory page number%d\n", pageNum);
     struct diskCell *cell = findDiskCell(&memDisk, pageNum);
 
     struct page pageToLoad = cell->pageOnDisk;
@@ -409,7 +414,6 @@ void initPool() {
     pool->next = NULL;
     pool->data = NULL;
     pool->isUsed = '0';
-    pool->blockSize = BLOCK_SIZE;
     pool->address = convertToVA(0);
 }
 
@@ -469,6 +473,7 @@ int _init(int n, int szPage) {
         int pageOffset = pageNum * (szPage / BLOCK_SIZE);
         struct page *thePage = createPage(pageOffset, &pool, pageNum);
 
+        table[pageNum] = createPageInfo(pageOffset, pageNum);
         if (pageNum + 1 > MAX_NUM_OF_PAGES_IN_RAM) {
             struct diskCell *cell = createDiskCell(*thePage, pageNum);
             int pushingStatus = pushDiskCell(&memDisk, cell);
@@ -477,12 +482,10 @@ int _init(int n, int szPage) {
             continue;
         }
 
-        //  int pushingStatus = pushPage(&virtualPages, pageOffset, &pool);
         int pushingStatus = pushPage(&virtualPages, thePage);
         if (pushingStatus != SUCCESS)
             return UNKNOWN_MISTAKE;
 
-        table[pageNum] = createPageInfo(pageOffset, pageNum);
     }
 
     return SUCCESS;
@@ -506,6 +509,7 @@ int _malloc(VA *ptr, size_t blockSize) {
     for (int pageIndex = firstPageNum; pageIndex < firstPageNum + pagesToAllocateNum; pageIndex++) {
         if (isPageAvailable(pageIndex) != SUCCESS) {
             loadPageToMem(pageIndex);
+            printf("loading page %d to mem", pageIndex);
         }
     }
 
@@ -539,9 +543,6 @@ int _write(VA ptr, void *pBuffer, size_t szBuffer) {
     if (szBuffer > BLOCK_SIZE) {
         return MEMORY_LACK;
     }
-    int pageNum = getPageNumberFromVA(ptr);
-    table[pageNum].isModified = '1';
-    table[pageNum].accessCounter++;
 
     VA blockAddr = findBlockAddr(ptr);
     return writeToBlock(blockAddr, pBuffer);
@@ -553,9 +554,6 @@ int _read(VA ptr, void *pBuffer, size_t szBuffer) {
     if (szBuffer > BLOCK_SIZE) {
         return MEMORY_LACK;
     }
-    int pageNum = getPageNumberFromVA(ptr);
-    table[pageNum].isModified = '1';
-    table[pageNum].accessCounter++;
     VA blockAddr = findBlockAddr(ptr);
     return readFromBlock(blockAddr, pBuffer, szBuffer);
 }

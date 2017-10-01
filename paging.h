@@ -6,25 +6,23 @@
 #define MAX_NUM_OF_PAGES_IN_RAM 16
 #define MAX_NUM_OF_PAGES 32
 #define MAX_PAGE_SIZE 1024
-#define ADDRESS_CAPACITY 17
+#define ADDRESS_CAPACITY 16
 #define BLOCK_SIZE 2
 
 #define SUCCESS 0
 #define WRONG_ARGUMENTS -1
 #define MEMORY_LACK -2
 #define UNKNOWN_MISTAKE 1
+
+#include "mmemory.h"
 struct block {
     struct block *next;
     VA address;
     char *data;
-    int blockSize;
     char isUsed;
 };
 struct pageInfo {
-    int addrOffset;
     int firstBlockOffset;
-    char isModified;
-    int accessCounter;
     char isAvailable; // 1 - страница в оперативной памяти; 0 - страница выгружена на диск
 };
 struct page {

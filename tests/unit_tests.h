@@ -1,6 +1,9 @@
 
 #ifndef MEMORY_MANAGER_UNIT_TESTS_H
 #define MEMORY_MANAGER_UNIT_TESTS_H
+
+#include <time.h>
+
 void _init_test(int testNum, int n, int szPage, int resultCode);
 void _malloc_test(int testNum, VA *ptr, size_t szBlock, int resultCode);
 void _free_test(int testNum, VA ptr, int resultCode);

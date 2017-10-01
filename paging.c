@@ -4,6 +4,7 @@
 #include <malloc.h>
 #include <mem.h>
 #include <math.h>
+#include <stdio.h>
 
 /*
  * Добавление блока в связный список
@@ -59,31 +60,19 @@ struct block *getBlockByAddress(struct block **head, VA address) {
     return NULL;
 }
 
-int pushPage(struct page **head, int pageOffset, struct block **memoryPool) {
+int pushPage(struct page **head, struct page *pageToPush) {
 
     struct page *newPage = (struct page *) malloc(sizeof(struct page));
 
-    VA firstBlockAddress = convertToVA(pageOffset);
-    struct block *firstBlock = getBlockByAddress(memoryPool, firstBlockAddress);
 
-    newPage->firstBlock = firstBlock;
+    newPage->firstBlock = pageToPush->firstBlock;
     newPage->next = NULL;
+    newPage->pageNum = pageToPush->pageNum;
     struct page *current = *head;
     while (current->next != NULL) {
         current = current->next;
     }
     current->next = newPage;
-    return SUCCESS;
-}
-
-int insertAfterPage(struct page *prevPage, struct page *pageToInsert) {
-    if (prevPage == NULL) {
-        return UNKNOWN_MISTAKE;
-    }
-    struct page *newPage = (struct page *) malloc(sizeof(struct page));
-    newPage->firstBlock = pageToInsert->firstBlock;
-    newPage->next = prevPage->next;
-    prevPage->next = newPage;
     return SUCCESS;
 }
 
@@ -158,27 +147,6 @@ void deletePage(struct page **head, struct page *pageToDel) {
     free(temp);
 }
 
-/*
- * Резервирование блоков - отметка флага isUsed в 1
- */
-int allocateBlocks(struct block **firstBlock, VA *addressesToAlloc, int size) {
-    struct block *current = *firstBlock;
-    while (current->next != NULL) {
-        VA blockAddress = current->address;
-        for (int count = 0; count < size; count++) {
-            VA addrToAlloc = *(addressesToAlloc + count);
-            if (strcmp(blockAddress, addrToAlloc) == 0) {
-                if (current->isUsed == '1')
-                    return UNKNOWN_MISTAKE;
-                current->isUsed = '1';
-                break;
-            }
-        }
-        current = current->next;
-    }
-    return SUCCESS;
-}
-
 int allocateBlock(struct block **firstBlock, VA addrToAlloc) {
     struct block *current = *firstBlock;
     while (current->next != NULL) {
@@ -193,21 +161,6 @@ int allocateBlock(struct block **firstBlock, VA addrToAlloc) {
     }
     return SUCCESS;
 }
-/*VA convertToVA(int blockNumber) {
-    VA address = calloc(ADDRESS_CAPACITY, sizeof(char) * ADDRESS_CAPACITY);
-
-    for (int i = 0; i < ADDRESS_CAPACITY; i++) {
-        address[i] = '0';
-    }
-    for (int bit = strlen(address); bit >= 0; bit--) {
-
-        int remainder = blockNumber % 2;
-        blockNumber /= 2;
-        char bitToAdd = (char) (remainder + '0');
-        address[bit] = bitToAdd;
-    }
-    return address;
-}*/
 
 /*
  * Преборазование виртуального адреса в десятичнй номер
@@ -224,7 +177,7 @@ int convertToDecimal(VA addressToConvert) {
 /*
  * Создание виртуальной страницы
  */
-struct page *createPage(int pageOffset, struct block **memoryPool) {
+struct page *createPage(int pageOffset, struct block **memoryPool, int pageNum) {
 
     struct page *newPage = (struct page *) malloc(sizeof(struct page));
 
@@ -233,6 +186,7 @@ struct page *createPage(int pageOffset, struct block **memoryPool) {
 
     newPage->firstBlock = firstBlock;
     newPage->next = NULL;
+    newPage->pageNum = pageNum;
 
     return newPage;
 }
@@ -297,7 +251,7 @@ int isSzPageValid(int szPage) {
  */
 VA *getVApool(VA firstVA, VA lastVA) {
     int size = convertToDecimal(lastVA) - convertToDecimal(firstVA);
-    VA *VApool =(VA *) malloc(size * sizeof(VA));
+    VA *VApool = (VA *) malloc(size * sizeof(VA));
     for (int addr = convertToDecimal(firstVA), count = 0; addr < convertToDecimal(lastVA); addr++, count++) {
         VApool[count] = convertToVA(addr);
     }
@@ -343,32 +297,11 @@ int convertToBlockAddr(VA addr) {
     return blockAddr;
 }
 
-/*
- * Получение виртуальных адресов блоков, которые выделяются в памяти
- */
-VA *getVAofBlocksToAlloc(int blockSize, VA *pagingVApool, int poolSize) {
-    int blocksNum = (int) ceil((double) blockSize / BLOCK_SIZE);
-    VA *blockAddrPool = malloc(blocksNum * sizeof(VA));
-    int prevAddr = -1, poolCount = 0;
-    for (int count = 0; count < poolSize; count++) {
-        VA currentVA = pagingVApool[count];
-        int blockAddr = convertToBlockAddr(currentVA);
-
-        if (blockAddr == prevAddr)
-            continue;
-        prevAddr = blockAddr;
-        blockAddrPool[poolCount] = convertToVA(blockAddr);
-        poolCount++;
-    }
-    return blockAddrPool;
-
-}
-
 VA *addressMapping(VA *ptr, size_t blockSize) {
     int lastAddrDecimal = blockSize + convertToDecimal(*ptr);
     VA lastAddress = convertToVA(lastAddrDecimal);
     VA *VApool = getVApool(*ptr, lastAddress);
- //   VA *addressesToAlloc = getVAofBlocksToAlloc(blockSize, VApool, blockSize);
+    //   VA *addressesToAlloc = getVAofBlocksToAlloc(blockSize, VApool, blockSize);
     return VApool;
 }
 
@@ -388,44 +321,44 @@ struct page *findPage(int pageNum);
 
 struct page *findOptimalPage(int anchorNum) {
 
-    int optimalPageNum;
+    int optimalPageNum = 0;
     if (anchorNum == 0)
-        optimalPageNum = input->n;
-    else optimalPageNum = anchorNum - 1;
+        if (input->n > MAX_NUM_OF_PAGES_IN_RAM)
+            optimalPageNum = MAX_NUM_OF_PAGES_IN_RAM;
+        else optimalPageNum = input->n;
     table[optimalPageNum].isAvailable = '0';
+    printf("unloading to disk page number %d\n", optimalPageNum);
     return findPage(optimalPageNum);
 }
 
 void loadExtraPageToDisk(int anchorPage) {
     struct page *pageToUnload = findOptimalPage(anchorPage);
     deletePage(&virtualPages, pageToUnload);
-
 }
 
 struct page *findPage(int pageNum) {
     struct page *current = virtualPages;
-    int pageCount = 0;
-    while (pageCount < pageNum) {
+    while (current->next != NULL) {
+        if (current->pageNum == pageNum)
+            return current;
         current = current->next;
-        pageCount++;
     };
     return current;
 }
 
 int loadPageToMem(int pageNum) {
-    //   for
-    // int pageOnDiskIndex = getPageOnDiskIndex(pageNum);
+    printf("loading to memory page number%d\n", pageNum);
     struct diskCell *cell = findDiskCell(&memDisk, pageNum);
 
     struct page pageToLoad = cell->pageOnDisk;
     deleteDiskCell(&memDisk, pageNum);
-    struct page *prevPage = findPage(pageNum);
-    int insertionStatus = insertAfterPage(prevPage, &pageToLoad);
-    if (insertionStatus != SUCCESS)
-        return insertionStatus;
-    table[pageNum].isAvailable = '1';
 
     loadExtraPageToDisk(pageNum);
+    int pushingStatus = pushPage(&virtualPages, &pageToLoad);
+    if (pushingStatus != SUCCESS)
+        return pushingStatus;
+
+    table[pageNum].isAvailable = '1';
 
 }
 
@@ -534,7 +467,7 @@ int _init(int n, int szPage) {
 
     for (int pageNum = 0; pageNum < n; pageNum++) {
         int pageOffset = pageNum * (szPage / BLOCK_SIZE);
-        struct page *thePage = createPage(pageOffset, &pool);
+        struct page *thePage = createPage(pageOffset, &pool, pageNum);
 
         if (pageNum + 1 > MAX_NUM_OF_PAGES_IN_RAM) {
             struct diskCell *cell = createDiskCell(*thePage, pageNum);
@@ -544,7 +477,8 @@ int _init(int n, int szPage) {
             continue;
         }
 
-        int pushingStatus = pushPage(&virtualPages, pageOffset, &pool);
+        //  int pushingStatus = pushPage(&virtualPages, pageOffset, &pool);
+        int pushingStatus = pushPage(&virtualPages, thePage);
         if (pushingStatus != SUCCESS)
             return UNKNOWN_MISTAKE;
 
@@ -562,14 +496,6 @@ int _malloc(VA *ptr, size_t blockSize) {
     if (blockSize > maxMemorySize || convertToDecimal(*ptr) + blockSize > maxMemorySize)
         return MEMORY_LACK;
 
-    /*
-     * алгоритм:
-     * 1) вычисляем номер страницы с начальным адресом таким адресом
-     * 2) считаем конечный адрес блока
-     * 3) выводим ошибку, если не хватит памяти
-     * 4) устанавливаем флаги занятости
-     */
-
     int blocksToAllocateNum = (int) ceil((double) blockSize / BLOCK_SIZE);
 
     int pagesToAllocateNum = (int) ceil((double) blockSize / input->szPage);
@@ -577,15 +503,13 @@ int _malloc(VA *ptr, size_t blockSize) {
     if (blocksToAllocateNum + firstPageNum > input->n)
         return MEMORY_LACK;
 
-    struct page *firstPage = findPage(firstPageNum);
     for (int pageIndex = firstPageNum; pageIndex < firstPageNum + pagesToAllocateNum; pageIndex++) {
         if (isPageAvailable(pageIndex) != SUCCESS) {
-            //поиск страницы на диске
-            //загрузка страницы из диска
             loadPageToMem(pageIndex);
         }
     }
 
+    struct page *firstPage = findPage(firstPageNum);
     VA *addressesToAlloc = addressMapping(ptr, blockSize);
     struct block *firstBlock = firstPage->firstBlock;
     for (int count = 0; count < blocksToAllocateNum; count++) {
@@ -600,12 +524,7 @@ int _malloc(VA *ptr, size_t blockSize) {
 int _free(VA ptr) {
     if (isAddressValid(ptr) == WRONG_ARGUMENTS)
         return WRONG_ARGUMENTS;
-    /*
-     * Алгоритм:
-     * 1) ищем блок с таким адресом
-     * 2) если блок уже свободен, возвращаем UNKNOWN_MISTAKE
-     * 3) если блок занят, устанавливаем флаг 'свободен'
-     */
+
     VA blockAddr = findBlockAddr(ptr);
     int freeRes = freeBlock(blockAddr);
     if (freeRes == UNKNOWN_MISTAKE)
@@ -620,13 +539,6 @@ int _write(VA ptr, void *pBuffer, size_t szBuffer) {
     if (szBuffer > BLOCK_SIZE) {
         return MEMORY_LACK;
     }
-    /*
-     * Алгоритм:
-     * 0) проверяем корректность парам
-     * 1) определяем блок с таким адресом
-     * 2) если он не замаллочен или есть данные - неизвестная ошибка
-     * 3) если все ок, пишем в блок
-     */
     int pageNum = getPageNumberFromVA(ptr);
     table[pageNum].isModified = '1';
     table[pageNum].accessCounter++;

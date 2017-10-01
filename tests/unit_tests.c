@@ -83,27 +83,22 @@ void run_init_tests() {
 }
 
 void run_malloc_tests() {
-    // начальные условия: 10 стр, размер 4
-    _init(10, 4);
+    // начальные условия: 30 стр, размер 8
+    _init(30,8);
     printf("\n--------_malloc tests--------\n");
-    VA addr = "00000000000000000";
-    _malloc_test(0, &addr, 16, SUCCESS);
+    VA addr = "00000000000011000";
+    _malloc_test(0, &addr, 8, SUCCESS);
     addr = "0065465465";
     _malloc_test(1, &addr, 4, WRONG_ARGUMENTS);
 
     addr = "00000000000011110";
-    _malloc_test(2, &addr, 16, MEMORY_LACK);
+    _malloc_test(2, &addr, 250, MEMORY_LACK);
 
-    addr = "00000000000000001";
-    _malloc_test(3, &addr, 16, UNKNOWN_MISTAKE); //попытка выделить уже занятый адрес
 
-//    printBlockUsage();
-//    for(int count = 0; count<25; count++) {
-//        _free(convertToVA(count));
-//    }
-//    printBlockUsage();
-//    freeGlobalVars();
-//    _init(10, 4);
+    addr = "00000000000011000";
+    _malloc_test(3, &addr, 2, UNKNOWN_MISTAKE); //попытка выделить уже занятый адрес
+
+
     addr = "00000000000010010"; //18
     _malloc_test(4, &addr, 5, SUCCESS);
 

@@ -30,6 +30,7 @@ struct pageInfo {
 struct page {
     struct page *next;
     struct block *firstBlock;
+    int pageNum;
 };
 struct diskCell {
     struct diskCell *next;

@@ -17,7 +17,7 @@
 #include "mmemory.h"
 struct block {
     struct block *next;
-    VA address;
+    int address;
     char *data;
     char isUsed;
 };
@@ -46,6 +46,7 @@ struct userInput {
  struct userInput *input;
 
 VA convertToVA(int num);
+int findBlockAddr(VA ptr);
 /*int convertToDecimal(VA addressToConvert);
 
 int pushPage(struct page **head, struct page *pageToPush);
@@ -53,7 +54,7 @@ int allocateBlocks(struct block **firstBlock, VA *addressesToAlloc, int size);
 struct page *createPage(int addrOffset, struct block **memoryPool);
 struct pageInfo createPageInfo(int firstBlockOffset, int addrOffset);
 int isAddressValid(VA ptr);
-VA *getVApool(VA firstVA, VA lastVA);
+VA *getPhysAddrPool(VA firstVA, VA lastVA);
 int getPageNumberFromVA(VA address);
 VA getVAoffset(VA address);
 VA findBlockAddr(VA ptr);

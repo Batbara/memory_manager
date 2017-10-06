@@ -15,4 +15,5 @@ void run_free_tests();
 void run_write_tests();
 void run_read_tests();
 void freeGlobalVars();
+void custom_test();
 #endif //MEMORY_MANAGER_UNIT_TESTS_H

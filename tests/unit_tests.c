@@ -3,6 +3,7 @@
 #include "../paging.h"
 #include <malloc.h>
 #include <mem.h>
+#include <assert.h>
 
 void _init_test(int testNum, int n, size_t szPage, int resultCode) {
     printf("\tTest %d: ", testNum);
@@ -66,66 +67,69 @@ void printBlockUsage(){
 
 void run_init_tests() {
     printf("\n--------_init tests--------\n");
-    _init_test(0, 5, 32, SUCCESS);
-    freeGlobalVars();
-
-    _init_test(1, -2, 64, WRONG_ARGUMENTS);
-    freeGlobalVars();
-
-    _init_test(2, 10, 15, WRONG_ARGUMENTS);
-    freeGlobalVars();
-
-    _init_test(3, 20, 128, SUCCESS);
-    freeGlobalVars();
-
-    _init_test(4, 100, 1025, WRONG_ARGUMENTS);
-    freeGlobalVars();
+    assert(_init(5,32)==SUCCESS);
+    assert(_init(-2,64)==WRONG_ARGUMENTS);
+    assert(_init(10,15)==WRONG_ARGUMENTS);
+    assert(_init(20,128)==SUCCESS);
+    assert(_init(100,1025)==WRONG_ARGUMENTS);
 }
+void custom_test(){
+    _init(10,4);
+    for(int i = 0; i<20; i+=1){
+        VA ptr = convertToVA(i);
+        _malloc(&ptr,2);
+    }
+    for(int i = 5; i<19; i+=1){
+        VA ptr = convertToVA(i);
+        _write(ptr,"pp",2);
+    }
+    printf("\nread result:\t");
+    for(int i = 7; i<18; i++){
+        VA ptr = convertToVA(i);
+        char *buff = calloc(sizeof(char),sizeof(char));
 
+        _read(ptr,buff,1);
+        printf("%s",buff);
+    }
+}
 void run_malloc_tests() {
-    // начальные условия: 30 стр, размер 8
     _init(30,8);
     printf("\n--------_malloc tests--------\n");
     VA addr = "0000000000011000";
-    _malloc_test(0, &addr, 8, SUCCESS);
+    assert(_malloc(&addr,8)==SUCCESS);
+
     addr = "0065465465";
-    _malloc_test(1, &addr, 4, WRONG_ARGUMENTS);
+    assert(_malloc(&addr,4)==WRONG_ARGUMENTS);
 
     addr = "0000000000011110";
-    _malloc_test(2, &addr, 250, MEMORY_LACK);
-
+    assert(_malloc(&addr,250)==MEMORY_LACK);
 
     addr = "0000000000011000";
-    _malloc_test(3, &addr, 2, UNKNOWN_MISTAKE); //попытка выделить уже занятый адрес
-
+   //  попытка выделить уже занятый адрес
+    assert(_malloc(&addr,2)==UNKNOWN_MISTAKE);
 
     addr = "0000000000010010"; //18
-    _malloc_test(4, &addr, 5, SUCCESS);
-
-    freeGlobalVars();
+    assert(_malloc(&addr,5)==SUCCESS);
 }
 
 void run_free_tests() {
-//    freeAll();
-    // freeGlobalVars();
     //начальные условия
     printf("\n--------_free tests--------\n");
     _init(10, 4);
     VA addr = "0000000000000000";
     _malloc(&addr, 16);
 
-    _free_test(0, addr, SUCCESS);
-    _free_test(1, addr, UNKNOWN_MISTAKE);
+    assert(_free(addr)==SUCCESS);
+    assert(_free(addr)==UNKNOWN_MISTAKE);
 
     VA incorrectAddr = "00lol0kek00000";
-    _free_test(2, incorrectAddr, WRONG_ARGUMENTS);
+    assert(_free(incorrectAddr)==WRONG_ARGUMENTS);
 
     addr = "0000000000000100";
-    _free_test(3, addr, SUCCESS);
+    assert(_free(addr)==SUCCESS);
 
     addr = "0000000000011000";
-    _free_test(4, addr, UNKNOWN_MISTAKE);
-    freeGlobalVars();
+    assert(_free(addr)==UNKNOWN_MISTAKE);
 }
 
 void run_write_tests() {
@@ -134,16 +138,16 @@ void run_write_tests() {
     VA addr = "0000000000000000";
     _malloc(&addr, 16);
 
-    _write_test(0, addr, "os", 2, SUCCESS);
-    _write_test(1, addr, "os", 2, UNKNOWN_MISTAKE);
-    _write_test(2, addr, "lol", 3, MEMORY_LACK);
+    assert(_write(addr,"os",2)==SUCCESS);
+    assert(_write(addr,"os",2)==UNKNOWN_MISTAKE);
+    assert(_write(addr,"os",3)==MEMORY_LACK);
+    assert(_write(addr,"lol",3)==MEMORY_LACK);
 
     addr = "0000000000001000";
-    _write_test(3, addr, "wp", 2, SUCCESS);
+    assert(_write(addr,"wp",2)==SUCCESS);
 
     VA faultyAddr = "lolkekcheburek";
-    _write_test(4, faultyAddr, "tt", 2, WRONG_ARGUMENTS);
-    freeGlobalVars();
+    assert(_write(faultyAddr,"tt",2)==WRONG_ARGUMENTS);
 }
 
 void run_read_tests() {
@@ -154,18 +158,17 @@ void run_read_tests() {
     _write(addr, "os", 2);
     char *ptr = calloc(2, 2 * sizeof(char));
 
-    _read_test(0, addr, ptr, 2, SUCCESS);
-    _read_test(1, addr, ptr, 4, MEMORY_LACK);
+    assert(_read(addr,ptr,2)==SUCCESS);
+    assert(_read(addr, ptr, 4)==MEMORY_LACK);
 
     VA faultyAddr = "it is not an address!!";
-    _read_test(2, faultyAddr, ptr, 2, WRONG_ARGUMENTS);
+    assert(_read(faultyAddr, ptr, 2)==WRONG_ARGUMENTS);
 
     addr = "0000000000001000";
     _write(addr, "c4", 2);
-    _read_test(3, addr, ptr, 2, SUCCESS);
+    assert(_read(addr,ptr,2)==SUCCESS);
 
     addr = "0000000000011000";
-    _read_test(4, addr, ptr, 2, UNKNOWN_MISTAKE);
-    freeGlobalVars();
+    assert(_read(addr,ptr,2)==UNKNOWN_MISTAKE);
 }
 

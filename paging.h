@@ -20,24 +20,28 @@ struct block {
     int address;
     char *data;
     char isUsed;
+    char writeStatus;
+    int blockSize;
 };
 struct pageInfo {
-    int firstBlockOffset;
+    int physBlockAddr;
     char isAvailable; // 1 - страница в оперативной памяти; 0 - страница выгружена на диск
 };
 struct page {
     struct page *next;
     struct block *firstBlock;
+    int freeSize;
     int pageNum;
 };
 struct diskCell {
     struct diskCell *next;
     struct page pageOnDisk;
-    int pageOffset;
+    int pageNum;
 };
 struct userInput {
     int n;
     int szPage;
+    int system_constant;
 };
  struct block *pool;
  struct page *virtualPages;
@@ -52,13 +56,13 @@ int findBlockAddr(VA ptr);
 int pushPage(struct page **head, struct page *pageToPush);
 int allocateBlocks(struct block **firstBlock, VA *addressesToAlloc, int size);
 struct page *createPage(int addrOffset, struct block **memoryPool);
-struct pageInfo createPageInfo(int firstBlockOffset, int addrOffset);
+struct pageInfo createPageInfo(int physBlockAddr, int addrOffset);
 int isAddressValid(VA ptr);
 VA *getPhysAddrPool(VA firstVA, VA lastVA);
 int getPageNumberFromVA(VA address);
 VA getVAoffset(VA address);
 VA findBlockAddr(VA ptr);
-VA *addressMapping(VA *ptr, size_t blockSize);
+VA *VApool(VA *ptr, size_t blockSize);
 int isPageAvailable(int pageNum);
 void saveInput(int n, int szPage);
 int createBlocks();
@@ -70,6 +74,6 @@ int checkInitArguments(int n, int szPage);
 struct diskCell *createDiskCell(struct page thePage, int addrOffset);
 int pushDiskCell(struct diskCell **head, struct diskCell *cellToPush);
 int loadPageToMem(int pageNum);
-struct page *findPage(int pageNum);*/
+struct page *findPageInMem(int pageNum);*/
 #endif //MEMORY_MANAGER_PAGING_H
 

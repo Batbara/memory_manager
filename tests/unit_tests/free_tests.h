@@ -1,0 +1,5 @@
+
+#ifndef MEMORY_MANAGER_FREE_TESTS_H
+#define MEMORY_MANAGER_FREE_TESTS_H
+void run_free_tests();
+#endif //MEMORY_MANAGER_FREE_TESTS_H

@@ -54,7 +54,7 @@ void testPageNum() {
     for (int pageNum = 1; pageNum < 1001; pageNum += 100) {
         fprintf(fp, "%d ", pageNum);
         _init(pageNum, 4);
-        int num = (pageNum) / pageNum;
+        int num = (pageNum+4) / pageNum;
         VA addr = convertToVA(num);
         timer = clock();
         int status = _malloc(&addr, 2);

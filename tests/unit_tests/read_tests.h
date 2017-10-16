@@ -1,0 +1,5 @@
+
+#ifndef MEMORY_MANAGER_READ_TESTS_H
+#define MEMORY_MANAGER_READ_TESTS_H
+void run_read_tests();
+#endif //MEMORY_MANAGER_READ_TESTS_H

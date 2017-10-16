@@ -397,25 +397,23 @@ int freeBlocks(struct page ** firstPage) {
     return SUCCESS;
 }
 
-int writeToBlock(int blockAddr, void *pBuffer, size_t size) {
-    struct block *blockToWrite = findBlockNode(blockAddr);
+int writeInPage(struct page * currPage, char inputData, int position) {
+    struct block *blockToWrite = currPage->firstBlock;
     if (blockToWrite == NULL || blockToWrite->writeStatus == '1' || blockToWrite->data == NULL)
         return UNKNOWN_MISTAKE;
-    char *inputData = (char *) pBuffer;
-    for (int i = 0; i < size; i++) {
-        blockToWrite->data[i] = inputData[i];
-    }
-    blockToWrite->writeStatus = '1';
+    blockToWrite->data[position] = inputData;
+
+   // blockToWrite->writeStatus = '1';
     return SUCCESS;
 }
 
-int readFromBlock(int blockAddr, void *pBuffer, int offset, size_t size) {
-    struct block *blockToRead = findBlockNode(blockAddr);
+int readFromBlock(struct page * currPage, void *pBuffer, int offset, size_t size) {
+    struct block *blockToRead = currPage->firstBlock;
     if (blockToRead == NULL || blockToRead->isUsed == '0' || blockToRead->data == NULL)
         return UNKNOWN_MISTAKE;
     char *dataValue = calloc(size, size * sizeof(char));
-    for (int i = 0; i < size; i++) {
-        dataValue[i] = blockToRead->data[offset + i];
+    for (int i = offset; i < size; i++) {
+        dataValue[i] = blockToRead->data[i];
     }
 
     memcpy(pBuffer, dataValue, size);
@@ -561,8 +559,24 @@ int _write(VA ptr, void *pBuffer, size_t szBuffer) {
     if (szBuffer > input->n * input->szPage || lastAddr>input->n*input->szPage) {
         return MEMORY_LACK;
     }
-    for (int i = firstAddr; i < lastAddr; i++) {
 
+    char* data = (char*) pBuffer;
+    for (int i = firstAddr; i < lastAddr; i++) {
+        VA address = convertToVA(i);
+        int currPageNum = getPageNumberFromVA(address);
+        if (currPageNum > MAX_NUM_OF_PAGES_IN_RAM) {
+            loadPageToMem(currPageNum);
+        }
+        struct page *currPage = findPageInMem(currPageNum);
+        if (currPage == NULL) {
+            return UNKNOWN_MISTAKE;
+        }
+
+        int offset = convertToDecimal(getVAoffset(address));
+        char dataChar = data[i-firstAddr];
+        int writeStatus = writeInPage(currPage,dataChar,offset);
+        if(writeStatus!= SUCCESS)
+            return writeStatus;
     }
 
     return SUCCESS;
@@ -571,14 +585,33 @@ int _write(VA ptr, void *pBuffer, size_t szBuffer) {
 int _read(VA ptr, void *pBuffer, size_t szBuffer) {
     if (isAddressValid(ptr) == WRONG_ARGUMENTS || szBuffer <= 0)
         return WRONG_ARGUMENTS;
-    if (szBuffer > BLOCK_SIZE) {
+
+    int firstAddr = convertToDecimal(ptr);
+    int lastAddr = firstAddr + szBuffer;
+
+    if (szBuffer > input->n * input->szPage || lastAddr>input->n*input->szPage) {
         return MEMORY_LACK;
     }
-    int pageIndex = getPageNumberFromVA(ptr);
-    if (isPageAvailable(pageIndex) != SUCCESS) {
-        loadPageToMem(pageIndex);
+    char* data = (char*)pBuffer;
+    for (int i = firstAddr; i < lastAddr; i++) {
+        VA address = convertToVA(i);
+        int currPageNum = getPageNumberFromVA(address);
+        if (currPageNum > MAX_NUM_OF_PAGES_IN_RAM) {
+            loadPageToMem(currPageNum);
+        }
+        struct page *currPage = findPageInMem(currPageNum);
+        if (currPage == NULL) {
+            return UNKNOWN_MISTAKE;
+        }
+
+        int offset = convertToDecimal(getVAoffset(address));
+        int size = input->n - currPage->freeSize;
+        data = (char*)malloc(sizeof(char)*size);
+        int readStatus = readFromBlock(currPage,data,offset,size);
+        if(readStatus!= SUCCESS)
+            return readStatus;
+        strcat(pBuffer, data);
     }
-    int blockAddr = findBlockAddr(ptr);
-    int offset = convertToDecimal(getVAoffset(ptr));
-    return readFromBlock(blockAddr, pBuffer, offset, szBuffer);
+
+    return SUCCESS;
 }

@@ -1,0 +1,8 @@
+//
+// Created by Barbarossa on 17.10.2017.
+//
+
+#ifndef MEMORY_MANAGER_WRITE_TESTS_H
+#define MEMORY_MANAGER_WRITE_TESTS_H
+
+#endif //MEMORY_MANAGER_WRITE_TESTS_H

@@ -68,7 +68,7 @@ void saveInput(int n, int szPage);
 int createBlocks();
 int freeBlock(VA addr);
 int writeToBlock(VA blockAddr, void *pBuffer);
-int readFromBlock(VA blockAddr, void *pBuffer, size_t size);
+int readFromPage(VA blockAddr, void *pBuffer, size_t size);
 void initPool();
 int checkInitArguments(int n, int szPage);
 struct diskCell *createDiskCell(struct page thePage, int addrOffset);

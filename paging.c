@@ -136,8 +136,8 @@ void deletePage(struct page **head, struct page *pageToDel) {
 
 int allocateBlock(struct block *firstBlock, int freeSize) {
 
-    if (firstBlock->isUsed == '1' && freeSize == input->szPage)
-        return MEMORY_LACK;
+//    if (firstBlock->isUsed == '1')
+//        return MEMORY_LACK;
     firstBlock->data = calloc((size_t) input->szPage, sizeof(char) * input->szPage);
     firstBlock->isUsed = '1';
     return SUCCESS;
@@ -237,18 +237,6 @@ int isSzPageValid(int szPage) {
     else return WRONG_ARGUMENTS;
 }
 
-/*
- * Получение пула адресов блоков, которые
- * находятся в интервале [firstVA, lastVA] виртуальных адресов
- */
-int *getPhysAddrPool(int firstAddr, int lastAddr) {
-    int size = lastAddr - firstAddr;
-    int *addrPool = (int *) malloc(size * sizeof(int));
-    for (int addr = firstAddr, count = 0; addr < lastAddr; addr++, count++) {
-        addrPool[count] = findBlockAddr(convertToVA(addr));
-    }
-    return addrPool;
-}
 
 /*
  * Получение номера виртуальной страницы из виртуального адреса
@@ -297,19 +285,6 @@ int convertToBlockAddr(VA addr) {
     int blockAddr = table[pageNumber].physBlockAddr * input->system_constant;
     // blockAddr += addressOffset;
     return blockAddr;
-}
-
-int *VApool(VA *ptr, size_t blockSize) {
-    int lastAddress = blockSize + convertToDecimal(*ptr);
-    int firstAddr = convertToDecimal(*ptr);
-//    int lastPhysAddress = findBlockAddr(convertToVA(lastAddress));
-//    int firstPhysAddress = findBlockAddr(*ptr);
-    //int *addressPool = getPhysAddrPool( convertToDecimal(*ptr), lastAddress);
-    int *addrPool = malloc(blockSize * sizeof(int));
-    for (int i = 0; i < blockSize; i++) {
-        *(addrPool + i) = firstAddr + i;
-    }
-    return addrPool;
 }
 
 int findBlockAddr(VA ptr) {
@@ -381,10 +356,10 @@ int loadPageToMem(int pageNum) {
 
 }
 
-int freeBlocks(struct page ** firstPage) {
-    struct page * current = *firstPage;
-    while(current->next!=NULL){
-        if(current->freeSize != input->szPage){
+int freeBlocks(struct page **firstPage) {
+    struct page *current = *firstPage;
+    while (current->next != NULL) {
+        if (current->freeSize != input->szPage) {
             struct block *physBlock = current->firstBlock;
             if (physBlock->isUsed == '0')
                 return UNKNOWN_MISTAKE;
@@ -397,26 +372,23 @@ int freeBlocks(struct page ** firstPage) {
     return SUCCESS;
 }
 
-int writeInPage(struct page * currPage, char inputData, int position) {
+int writeInPage(struct page *currPage, char inputData, int position) {
     struct block *blockToWrite = currPage->firstBlock;
     if (blockToWrite == NULL || blockToWrite->writeStatus == '1' || blockToWrite->data == NULL)
         return UNKNOWN_MISTAKE;
     blockToWrite->data[position] = inputData;
 
-   // blockToWrite->writeStatus = '1';
+    // blockToWrite->writeStatus = '1';
     return SUCCESS;
 }
 
-int readFromBlock(struct page * currPage, void *pBuffer, int offset, size_t size) {
+int readFromPage(struct page *currPage, void *pBuffer, int offset) {
     struct block *blockToRead = currPage->firstBlock;
     if (blockToRead == NULL || blockToRead->isUsed == '0' || blockToRead->data == NULL)
         return UNKNOWN_MISTAKE;
-    char *dataValue = calloc(size, size * sizeof(char));
-    for (int i = offset; i < size; i++) {
-        dataValue[i] = blockToRead->data[i];
-    }
-
-    memcpy(pBuffer, dataValue, size);
+    char *dataValue = calloc(1, sizeof(char));
+    dataValue[0] = blockToRead->data[offset];
+    memcpy(pBuffer, dataValue, 1);
     return SUCCESS;
 }
 
@@ -524,7 +496,7 @@ int _malloc(VA *ptr, size_t blockSize) {
         if (currPage == NULL) {
             return UNKNOWN_MISTAKE;
         }
-        currPage->freeSize -= 1;
+        // currPage->freeSize -= 1;
 
         int allocStatus = allocateBlock(currPage->firstBlock, currPage->freeSize);
         if (allocStatus != SUCCESS)
@@ -556,11 +528,11 @@ int _write(VA ptr, void *pBuffer, size_t szBuffer) {
     int firstAddr = convertToDecimal(ptr);
     int lastAddr = firstAddr + szBuffer;
 
-    if (szBuffer > input->n * input->szPage || lastAddr>input->n*input->szPage) {
+    if (szBuffer > input->n * input->szPage || lastAddr > input->n * input->szPage) {
         return MEMORY_LACK;
     }
 
-    char* data = (char*) pBuffer;
+    char *data = (char *) pBuffer;
     for (int i = firstAddr; i < lastAddr; i++) {
         VA address = convertToVA(i);
         int currPageNum = getPageNumberFromVA(address);
@@ -573,10 +545,11 @@ int _write(VA ptr, void *pBuffer, size_t szBuffer) {
         }
 
         int offset = convertToDecimal(getVAoffset(address));
-        char dataChar = data[i-firstAddr];
-        int writeStatus = writeInPage(currPage,dataChar,offset);
-        if(writeStatus!= SUCCESS)
+        char dataChar = data[i - firstAddr];
+        int writeStatus = writeInPage(currPage, dataChar, offset);
+        if (writeStatus != SUCCESS)
             return writeStatus;
+        currPage->freeSize -= 1;
     }
 
     return SUCCESS;
@@ -589,10 +562,10 @@ int _read(VA ptr, void *pBuffer, size_t szBuffer) {
     int firstAddr = convertToDecimal(ptr);
     int lastAddr = firstAddr + szBuffer;
 
-    if (szBuffer > input->n * input->szPage || lastAddr>input->n*input->szPage) {
+    if (szBuffer > input->n * input->szPage || lastAddr > input->n * input->szPage) {
         return MEMORY_LACK;
     }
-    char* data = (char*)pBuffer;
+
     for (int i = firstAddr; i < lastAddr; i++) {
         VA address = convertToVA(i);
         int currPageNum = getPageNumberFromVA(address);
@@ -605,10 +578,10 @@ int _read(VA ptr, void *pBuffer, size_t szBuffer) {
         }
 
         int offset = convertToDecimal(getVAoffset(address));
-        int size = input->n - currPage->freeSize;
-        data = (char*)malloc(sizeof(char)*size);
-        int readStatus = readFromBlock(currPage,data,offset,size);
-        if(readStatus!= SUCCESS)
+        //  int size = input->szPage - currPage->freeSize;
+        char *data = (char *) malloc(sizeof(char));
+        int readStatus = readFromPage(currPage, data, offset);
+        if (readStatus != SUCCESS)
             return readStatus;
         strcat(pBuffer, data);
     }

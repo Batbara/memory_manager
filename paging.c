@@ -134,6 +134,21 @@ void deletePage(struct page **head, struct page *pageToDel) {
     free(current);
 }
 
+int allocateBlockOnDiskedPage(int pageNum) {
+    struct diskCell *cell = findDiskCell(&memDisk, pageNum);
+    if (cell == NULL)
+        return UNKNOWN_MISTAKE;
+
+    struct page pageToLoad = cell->pageOnDisk;
+    struct block *firstBlock = pageToLoad.firstBlock;
+//    if (firstBlock->isUsed == '1')
+//        return MEMORY_LACK;
+    firstBlock->data = calloc((size_t) input->szPage, sizeof(char) * input->szPage);
+    firstBlock->isUsed = '1';
+    return SUCCESS;
+
+}
+
 int allocateBlock(struct block *firstBlock, int freeSize) {
 
 //    if (firstBlock->isUsed == '1')
@@ -297,6 +312,19 @@ int isPageAvailable(int pageNum) {
     if (info.isAvailable == '1')
         return SUCCESS;
     else return UNKNOWN_MISTAKE;
+}
+int isPageInMem(int pageNum){
+    struct page *current = virtualPages;
+    if (current->pageNum == pageNum && current->next == NULL)
+        return SUCCESS;
+    while (current->next != NULL) {
+        if (current->pageNum == pageNum)
+            return SUCCESS;
+        current = current->next;
+    };
+    if (current->pageNum == pageNum)
+        return SUCCESS;
+    return UNKNOWN_MISTAKE;
 }
 
 struct page *findPageInMem(int pageNum);
@@ -489,8 +517,12 @@ int _malloc(VA *ptr, size_t blockSize) {
     for (int i = firstAddr; i < lastAddr; i++) {
         VA address = convertToVA(i);
         int currPageNum = getPageNumberFromVA(address);
-        if (currPageNum > MAX_NUM_OF_PAGES_IN_RAM) {
-            loadPageToMem(currPageNum);
+        if (currPageNum >= MAX_NUM_OF_PAGES_IN_RAM) {
+            //loadPageToMem(currPageNum);
+            int allocStatus = allocateBlockOnDiskedPage(currPageNum);
+            if (allocStatus != SUCCESS)
+                return allocStatus;
+            continue;
         }
         struct page *currPage = findPageInMem(currPageNum);
         if (currPage == NULL) {
@@ -536,8 +568,10 @@ int _write(VA ptr, void *pBuffer, size_t szBuffer) {
     for (int i = firstAddr; i < lastAddr; i++) {
         VA address = convertToVA(i);
         int currPageNum = getPageNumberFromVA(address);
-        if (currPageNum > MAX_NUM_OF_PAGES_IN_RAM) {
-            loadPageToMem(currPageNum);
+        if (currPageNum >= MAX_NUM_OF_PAGES_IN_RAM) {
+            if(isPageInMem(currPageNum)!=SUCCESS) {
+                loadPageToMem(currPageNum);
+            }
         }
         struct page *currPage = findPageInMem(currPageNum);
         if (currPage == NULL) {
@@ -569,9 +603,14 @@ int _read(VA ptr, void *pBuffer, size_t szBuffer) {
     for (int i = firstAddr; i < lastAddr; i++) {
         VA address = convertToVA(i);
         int currPageNum = getPageNumberFromVA(address);
-        if (currPageNum > MAX_NUM_OF_PAGES_IN_RAM) {
+        if(isPageInMem(currPageNum)!=SUCCESS) {
             loadPageToMem(currPageNum);
         }
+//        if (currPageNum >= MAX_NUM_OF_PAGES_IN_RAM) {
+//            if(isPageInMem(currPageNum)!=SUCCESS) {
+//                loadPageToMem(currPageNum);
+//            }
+//        }
         struct page *currPage = findPageInMem(currPageNum);
         if (currPage == NULL) {
             return UNKNOWN_MISTAKE;

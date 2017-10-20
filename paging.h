@@ -21,6 +21,7 @@ struct block {
     char *data;
     char isUsed;
     char writeStatus;
+    int usedSize;
     int blockSize;
 };
 struct pageInfo {

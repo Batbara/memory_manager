@@ -24,18 +24,18 @@ void write_23bytes16bytesMalloc_memLackReturned(){
     assert(_write(addr,"thisstringisjusttoolong",23)==MEMORY_LACK);
 }
 
-void write_3bytesbytesMalloc_memLackReturned(){
+void write_3bytes16Malloc_successReturned(){
     _init(25,4);
     VA addr = "0000000001010100";
     _malloc(&addr,16);
     assert(_write(convertToVA(90),"lol",3)==SUCCESS);
 }
 void run_write_tests(){
+
     write_6bytesToInvalidVA_wrongArgsReturned();
     write_23bytes16bytesMalloc_memLackReturned();
     write_6bytes6bytesMalloc_successReturned();
-
-    write_3bytesbytesMalloc_memLackReturned();
+    write_3bytes16Malloc_successReturned();
 
 }
 

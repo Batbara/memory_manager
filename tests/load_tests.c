@@ -36,7 +36,7 @@ void testPageSize() {
         int num = 15 * pageSize;
         VA addr = convertToVA(num);
         timer = clock();
-        _malloc(&addr, 2);
+        _write(addr, "test",4);
         timer = clock() - timer;
         float time = ((float) timer) / CLOCKS_PER_SEC * 10000;
         fprintf(fp, "%f\n", time);
@@ -53,12 +53,15 @@ void testPageNum() {
     fprintf(fp, "Testing malloc time from page size\n");
     for (int pageNum = 1; pageNum < 1001; pageNum += 100) {
         fprintf(fp, "%d ", pageNum);
-        _init(pageNum, 4);
-        int num = (pageNum+4) / pageNum;
+        int i= _init(pageNum, 8);
+        int num = 8*pageNum-4;
         VA addr = convertToVA(num);
         timer = clock();
-        int status = _malloc(&addr, 2);
-        printf("malloc status: %d\n", status);
+
+       int m= _malloc(&addr,4);
+
+        int c=_write(addr, "test",4);
+        printf("%d",c);
         timer = clock() - timer;
         float time = ((float) timer) / CLOCKS_PER_SEC * 10000;
         fprintf(fp, "%f\n", time);

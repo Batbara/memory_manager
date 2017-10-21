@@ -3,8 +3,8 @@
 
 
 #define MAX_SIZE 32768
-#define MAX_NUM_OF_PAGES_IN_RAM 16
-#define MAX_NUM_OF_PAGES 32
+#define MAX_NUM_OF_PAGES_IN_RAM 10
+#define MAX_NUM_OF_PAGES 1000
 #define MAX_PAGE_SIZE 1024
 #define ADDRESS_CAPACITY 16
 #define BLOCK_SIZE 2
@@ -37,6 +37,8 @@ struct page {
 struct diskCell {
     struct diskCell *next;
     struct page pageOnDisk;
+    char *data;
+    int usedSize;
     int pageNum;
 };
 struct userInput {
@@ -44,7 +46,7 @@ struct userInput {
     int szPage;
     int system_constant;
 };
- struct block *pool;
+ struct block *memory;
  struct page *virtualPages;
  struct pageInfo *table;
  struct diskCell *memDisk;
@@ -70,7 +72,7 @@ int createBlocks();
 int freeBlock(VA addr);
 int writeToBlock(VA blockAddr, void *pBuffer);
 int readFromPage(VA blockAddr, void *pBuffer, size_t size);
-void initPool();
+void initPhysMem();
 int checkInitArguments(int n, int szPage);
 struct diskCell *createDiskCell(struct page thePage, int addrOffset);
 int pushDiskCell(struct diskCell **head, struct diskCell *cellToPush);

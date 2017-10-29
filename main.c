@@ -15,10 +15,11 @@ int main() {
    //run_init_tests();
    //run_malloc_tests();
   //  run_free_tests();
-    run_write_tests();
-   // run_read_tests();
+//    run_write_tests();
+//    run_read_tests();
   //  testPageNum();
 //    testPageSize();
-
+    //testPageSize();
+    testPageNum();
     return 0;
 }

@@ -12,6 +12,8 @@ void read_11bytes14bytesWrite_successReturned(){
     assert(_write(convertToVA(5),"teststring1234",14) == SUCCESS);
     assert(_read(convertToVA(7),buff,11)==SUCCESS);
     printf("%s",buff);
+//    freeGlobalVars();
+//    free(buff);
 
 }
 void read_5bytesFromDiskedPage_successReturned(){
@@ -21,6 +23,11 @@ void read_5bytesFromDiskedPage_successReturned(){
     char *buff = calloc(5*sizeof(char),5*sizeof(char));
     assert(_write(convertToVA(60),"teststring1234",14) == SUCCESS);
     assert(_read(convertToVA(64),buff,5)==SUCCESS);
+    printf("%s",buff);
+
+//
+//    freeGlobalVars();
+//    free(buff);
 }
 
 void read_3bytes4bytesWrite_successReturned(){
@@ -31,6 +38,10 @@ void read_3bytes4bytesWrite_successReturned(){
     assert(_write(convertToVA(37),"lolz",4) == SUCCESS);
     assert(_read(convertToVA(37),buff,3)==SUCCESS);
     printf("%s",buff);
+
+//
+//    freeGlobalVars();
+//    free(buff);
 }
 
 void read_incorrectAddr_wrongArgsReturned(){
@@ -41,6 +52,10 @@ void read_incorrectAddr_wrongArgsReturned(){
     assert(_write(convertToVA(37),"lolz",4) == SUCCESS);
     VA wrongAddr = "0000000000011";
     assert(_read(wrongAddr,buff,3)==WRONG_ARGUMENTS);
+
+//
+//    freeGlobalVars();
+//    free(buff);
 }
 
 void read_20bytes5bytesWrite_memLackReturned(){
@@ -50,13 +65,18 @@ void read_20bytes5bytesWrite_memLackReturned(){
     char *buff = calloc(20*sizeof(char),20*sizeof(char));
     assert(_write(addr,"test1",5) == SUCCESS);
     assert(_read(addr,buff,20)==MEMORY_LACK);
+
+//
+//    freeGlobalVars();
+//    free(buff);
 }
 
 
 void run_read_tests(){
-    //read_11bytes14bytesWrite_successReturned();
-   // read_incorrectAddr_wrongArgsReturned();
+    read_11bytes14bytesWrite_successReturned();
+    read_incorrectAddr_wrongArgsReturned();
     read_5bytesFromDiskedPage_successReturned();
-//    read_3bytes4bytesWrite_successReturned();
-//    read_20bytes5bytesWrite_memLackReturned();
+    read_3bytes4bytesWrite_successReturned();
+    freeGlobalVars();
+   // read_20bytes5bytesWrite_memLackReturned();
 }

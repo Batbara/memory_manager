@@ -33,6 +33,7 @@ struct page {
     struct block *firstBlock;
     int freeSize;
     int pageNum;
+    char isUsed;
 };
 struct diskCell {
     struct diskCell *next;
@@ -54,6 +55,7 @@ struct userInput {
 
 VA convertToVA(int num);
 int findBlockAddr(VA ptr);
+void freeGlobalVars();
 /*int convertToDecimal(VA addressToConvert);
 
 int pushPage(struct page **head, struct page *pageToPush);

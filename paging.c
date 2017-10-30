@@ -496,7 +496,7 @@ int freeBlocksOnDiskedPage(int pageNum) {
     return freeBlocks(pageToLoad);
 }
 
-int writeInPage(struct page *currPage, char *inputData, size_t inputSize, int position) {
+int writeInPage(struct page *currPage, char *inputData, int inputSize, int position) {
     struct block *blockToWrite = currPage->firstBlock;
     if (blockToWrite == NULL || blockToWrite->isUsed == '0' || blockToWrite->data == NULL)
         return UNKNOWN_MISTAKE;
@@ -507,7 +507,7 @@ int writeInPage(struct page *currPage, char *inputData, size_t inputSize, int po
     return SUCCESS;
 }
 
-int readFromPage(struct page *currPage, void *pBuffer, size_t sizeToRead, int offset) {
+int readFromPage(struct page *currPage, void *pBuffer, int sizeToRead, int offset) {
     struct block *blockToRead = currPage->firstBlock;
     if (blockToRead == NULL || blockToRead->isUsed == '0' || blockToRead->data == NULL)
         return UNKNOWN_MISTAKE;
@@ -671,9 +671,12 @@ int _write(VA ptr, void *pBuffer, size_t szBuffer) {
     struct page *startPage = getPage(startPageNum);
     startPage->offset = offset;
 
-    int pagesToAlloc = (int) ceil(szBuffer / input->szPage);
+    int pagesToAlloc;
+    if (szBuffer < input->szPage) {
+        pagesToAlloc = 1;
+    } else { pagesToAlloc = (int) ceil(szBuffer / input->szPage); }
 
-    for (int pNum = startPageNum; pNum < pagesToAlloc; pNum++) {
+    for (int pNum = startPageNum; pNum < startPageNum+pagesToAlloc; pNum++) {
         int isAlloced = isPageAllocated(pNum);
         if (isAlloced != SUCCESS) {
             return isAlloced;
@@ -685,7 +688,12 @@ int _write(VA ptr, void *pBuffer, size_t szBuffer) {
         if (currPage == NULL) {
             return UNKNOWN_MISTAKE;
         }
-        size_t sizeToWrite = (size_t) table[pNum].writeSize - currPage->offset;
+        int sizeToWrite = -1;
+        if(szBuffer < table[pNum].writeSize - currPage->offset){
+            sizeToWrite = szBuffer;
+        } else{
+            sizeToWrite = table[pNum].writeSize - currPage->offset;
+        }
         int writeStatus = writeInPage(currPage, data, sizeToWrite, currPage->offset);
         table[pNum].writeSize -= sizeToWrite;
         if (writeStatus != SUCCESS)
@@ -712,9 +720,12 @@ int _read(VA ptr, void *pBuffer, size_t szBuffer) {
     struct page *startPage = getPage(startPageNum);
     startPage->offset = offset;
 
-    int pagesToAlloc = (int) ceil(szBuffer / input->szPage);
+    int pagesToAlloc;
+    if (szBuffer < input->szPage) {
+        pagesToAlloc = 1;
+    } else { pagesToAlloc = (int) ceil(szBuffer / input->szPage); }
 
-    for (int pNum = startPageNum; pNum <= pagesToAlloc; pNum++) {
+    for (int pNum = startPageNum; pNum <startPageNum+ pagesToAlloc; pNum++) {
         int isAlloced = isPageAllocated(pNum);
         if (isAlloced != SUCCESS) {
             return isAlloced;
@@ -726,7 +737,12 @@ int _read(VA ptr, void *pBuffer, size_t szBuffer) {
         if (currPage == NULL) {
             return UNKNOWN_MISTAKE;
         }
-        size_t sizeToRead = input->szPage - (size_t) table[pNum].writeSize;
+        int sizeToRead = -1;
+        if(szBuffer < input->szPage-currPage->freeSize){
+            sizeToRead = szBuffer;
+        } else{
+            sizeToRead = input->szPage-currPage->freeSize;
+        }
         int readStatus = readFromPage(currPage, pBuffer, sizeToRead, currPage->offset);
         if (readStatus != SUCCESS)
             return readStatus;

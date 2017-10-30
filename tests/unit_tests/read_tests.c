@@ -77,8 +77,8 @@ void read_20bytes5bytesWrite_memLackReturned(){
 void run_read_tests(){
     read_11bytes14bytesWrite_successReturned();
     //read_incorrectAddr_wrongArgsReturned();
-    read_5bytesFromDiskedPage_successReturned();
-    read_3bytes4bytesWrite_successReturned();
-   // freeGlobalVars();
+  //  read_5bytesFromDiskedPage_successReturned();
+   // read_3bytes4bytesWrite_successReturned();
+  // freeGlobalVars();
    // read_20bytes5bytesWrite_memLackReturned();
 }

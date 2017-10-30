@@ -25,7 +25,7 @@ typedef char* VA;				// Тип описывающий адрес блока
  	@brief	Выделяет блок памяти определенного размера
 
 	@param	[out] ptr		адресс блока
-	@param	[in]  szBlock	размер блока
+	@param	[in]  mallocSize	размер блока
 
 	@return	код ошибки
 	@retval	0	успешное выполнение
@@ -33,7 +33,7 @@ typedef char* VA;				// Тип описывающий адрес блока
 	@retval	-2	нехватка памяти
 	@retval	1	неизвестная ошибка
  **/
-int _malloc (VA* ptr, size_t szBlock);
+int _malloc (VA* ptr, size_t mallocSize);
 
 
 

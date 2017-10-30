@@ -26,6 +26,7 @@ struct block {
 };
 struct pageInfo {
     int physBlockAddr;
+    int writeSize;
     char isAvailable; // 1 - страница в оперативной памяти; 0 - страница выгружена на диск
 };
 struct page {
@@ -34,6 +35,7 @@ struct page {
     int freeSize;
     int pageNum;
     char isUsed;
+    int offset;
 };
 struct diskCell {
     struct diskCell *next;

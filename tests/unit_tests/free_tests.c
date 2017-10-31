@@ -3,36 +3,36 @@
 #include "../../paging.h"
 void free_0VA_16malloc_successReturned(){
     _init(10, 4);
-    VA addr = "0000000000000000";
+    VA addr;
     _malloc(&addr, 16);
 
     assert(_free(addr)==SUCCESS);
 }
 void free_invalidVA_16malloc_wrongArgsReturned(){
     _init(10, 4);
-    VA addr = "0000000000000000";
+    VA addr;
     _malloc(&addr, 16);
 
-    VA incorrectAddr = "00lol0kek00000";
-    assert(_free(incorrectAddr)==WRONG_ARGUMENTS);
+    addr+=100500;
+    assert(_free(addr)==WRONG_ARGUMENTS);
 }
 void free_150VA_32malloc_successReturned(){
     _init(21, 8);
-    VA addr = "0000000010011001";
+    VA addr;
     _malloc(&addr, 8);
 
     assert(_free(addr)==SUCCESS);
 }
 void free_20VA_10malloc_unknownMistakeReturned(){
     _init(15, 8);
-    VA addr = "0000000000101010";
+    VA addr;
     _malloc(&addr, 10);
-
-    assert(_free(convertToVA(20))==UNKNOWN_MISTAKE);
+    addr+=22;
+    assert(_free(addr)==UNKNOWN_MISTAKE);
 }
 void free_272VA_10malloc_successReturned(){
     _init(22, 16);
-    VA addr = convertToVA(272);
+    VA addr;
     _malloc(&addr, 10);
 
     assert(_free(addr)==SUCCESS);

@@ -12,9 +12,7 @@ void read_11bytes14bytesWrite_successReturned(){
     assert(_write(addr,"teststring1234",14) == SUCCESS);
     addr+=2;
     assert(_read(addr,buff,11)==SUCCESS);
-    printf("%s",buff);
-//    freeGlobalVars();
-//    free(buff);
+    printf("%s\n",buff);
 
 }
 void read_5bytesFromDiskedPage_successReturned(){
@@ -25,11 +23,8 @@ void read_5bytesFromDiskedPage_successReturned(){
     assert(_write(addr,"teststring1234",14) == SUCCESS);
     addr+=4;
     assert(_read(addr,buff,5)==SUCCESS);
-    printf("%s",buff);
+    printf("%s\n",buff);
 
-//
-//    freeGlobalVars();
-//    free(buff);
 }
 
 void read_3bytes4bytesWrite_successReturned(){
@@ -38,47 +33,35 @@ void read_3bytes4bytesWrite_successReturned(){
     _malloc(&addr,20);
     char *buff = calloc(3*sizeof(char),3*sizeof(char));
     assert(_write(addr,"lolz",4) == SUCCESS);
-    assert(_read(addr,buff,3)==SUCCESS);
-    printf("%s",buff);
+   assert(_read(addr,buff,3)==SUCCESS);
+    printf("%s\n",buff);
 
-//
-//    freeGlobalVars();
-//    free(buff);
 }
 
 void read_incorrectAddr_wrongArgsReturned(){
     _init(12,8);
-    VA addr = "0000000000100011";
+    VA addr;
     _malloc(&addr,20);
     char *buff = calloc(3*sizeof(char),3*sizeof(char));
-    assert(_write(convertToVA(37),"lolz",4) == SUCCESS);
-    VA wrongAddr = "0000000000011";
-    assert(_read(wrongAddr,buff,3)==WRONG_ARGUMENTS);
-
-//
-//    freeGlobalVars();
-//    free(buff);
+    assert(_write(addr,"lolz",4) == SUCCESS);
+    assert(_read(addr,buff,-3)==WRONG_ARGUMENTS);
 }
 
 void read_20bytes5bytesWrite_memLackReturned(){
     _init(1,16);
-    VA addr = "0000000000000011";
+    VA addr;
     _malloc(&addr,5);
     char *buff = calloc(20*sizeof(char),20*sizeof(char));
     assert(_write(addr,"test1",5) == SUCCESS);
     assert(_read(addr,buff,20)==MEMORY_LACK);
 
-//
-//    freeGlobalVars();
-//    free(buff);
 }
 
 
 void run_read_tests(){
     read_11bytes14bytesWrite_successReturned();
-    //read_incorrectAddr_wrongArgsReturned();
-  //  read_5bytesFromDiskedPage_successReturned();
-   // read_3bytes4bytesWrite_successReturned();
-  // freeGlobalVars();
-   // read_20bytes5bytesWrite_memLackReturned();
+    read_incorrectAddr_wrongArgsReturned();
+   read_5bytesFromDiskedPage_successReturned();
+    read_3bytes4bytesWrite_successReturned();
+    read_20bytes5bytesWrite_memLackReturned();
 }

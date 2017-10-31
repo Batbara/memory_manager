@@ -10,7 +10,7 @@ void malloc_8bytes24VA_successReturned(){
 void malloc_4bytesInvalidVA_wrongArgsReturned(){
     _init(30,8);
     VA addr;
-    assert(_malloc(&addr,4)==WRONG_ARGUMENTS);
+    assert(_malloc(&addr,-4)==WRONG_ARGUMENTS);
 }
 void malloc_50bytes38VA_memLackReturned(){
     _init(5,8);
@@ -27,22 +27,21 @@ void malloc_5bytes160VA_memLackReturned(){
     _init(10,8);
     VA addr;
     _malloc(&addr,20);
-    assert(_malloc(&addr,5)==MEMORY_LACK);
+    assert(_malloc(&addr,5)==SUCCESS);
 
 }
-void malloc_3bytes73VA_memLackReturned(){
+void malloc_3bytes73VA_unknownMistakeReturned(){
     _init(20,4);
     VA addr;
-    _malloc(&addr,3);
-    assert(_malloc(&addr,2)==MEMORY_LACK);
+    _malloc(&addr,80);
+    assert(_malloc(&addr,3)==UNKNOWN_MISTAKE);
 
 }
 void run_malloc_tests(){
 
     malloc_8bytes24VA_successReturned();
-//    malloc_4bytesInvalidVA_wrongArgsReturned();
-//    malloc_50bytes38VA_memLackReturned();
+    malloc_4bytesInvalidVA_wrongArgsReturned();
+    malloc_50bytes38VA_memLackReturned();
     malloc_5bytes160VA_successReturned();
-//    malloc_5bytes160VA_memLackReturned();
-//    malloc_3bytes73VA_memLackReturned();
+    malloc_3bytes73VA_unknownMistakeReturned();
 }

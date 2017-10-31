@@ -13,9 +13,8 @@ void testAddrCalculation() {
     for (int addr = 0; addr < 1000; addr += 100) {
         fprintf(fp, "%d ", addr);
 
-        VA virtual = convertToVA(addr);
         timer = clock();
-        findBlockAddr(virtual);
+        findBlockAddr((VA)addr);
         timer = clock() - timer;
         float time = ((float) timer) / CLOCKS_PER_SEC * 10000;
         fprintf(fp, "%f\n", time);
@@ -39,7 +38,7 @@ void testPageSize() {
 
         _init(20, pageSize);
         int num = 15 * pageSize;
-        VA addr = convertToVA(num);
+        VA addr;
 
         _write(addr, "test",4);
 
@@ -70,7 +69,7 @@ void testPageNum() {
 
         int i= _init(pageNum, 8);
         int num = 8*pageNum-4;
-        VA addr = convertToVA(num);
+        VA addr;
         timer = clock();
 
        int m= _malloc(&addr,4);

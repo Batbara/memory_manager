@@ -3,11 +3,9 @@
 
 
 #define MAX_SIZE 32768
-#define MAX_NUM_OF_PAGES_IN_RAM 10
+#define MAX_MEM_SIZE 40
 #define MAX_NUM_OF_PAGES 1000
-#define MAX_PAGE_SIZE 1024
-#define ADDRESS_CAPACITY 16
-#define BLOCK_SIZE 2
+#define MAX_PAGE_SIZE 4
 
 #define SUCCESS 0
 #define WRONG_ARGUMENTS -1
@@ -55,7 +53,6 @@ struct userInput {
  struct diskCell *memDisk;
  struct userInput *input;
 
-VA convertToVA(int num);
 int findBlockAddr(VA ptr);
 void freeGlobalVars();
 /*int convertToDecimal(VA addressToConvert);

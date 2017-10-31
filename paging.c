@@ -41,19 +41,6 @@ int pushBlock(struct block **head, int address, int blockSize) {
     return SUCCESS;
 }
 
-/*
- * Преобразование десятичного номера блока в двоичный адрес
- */
-VA convertToVA(int num) {
-    unsigned int mask = MAX_SIZE;   //mask = [1000 0000 0000 0000]
-    VA address = calloc(ADDRESS_CAPACITY, sizeof(char) * ADDRESS_CAPACITY);
-    while (mask > 0) {
-        ((num & mask) == 0) ? strncat(address, "0", 1) : strncat(address, "1", 1);
-        mask = mask >> 1;  // Right Shift
-    }
-    return address;
-}
-
 int pushPage(struct page **head, struct page *pageToPush) {
     struct page *newPage = (struct page *) malloc(sizeof(struct page));
 
@@ -302,7 +289,7 @@ int isPageInMem(int pageNum) {
     if (current->pageNum == pageNum && current->next == NULL)
         return SUCCESS;
     int pageInMemCount = 0;
-    while (pageInMemCount < MAX_NUM_OF_PAGES_IN_RAM && current->next != NULL) {
+    while (pageInMemCount <  MAX_MEM_SIZE/input->szPage && current->next != NULL) {
         if (table[current->pageNum].isAvailable == '1') {
 
             pageInMemCount++;
@@ -320,13 +307,14 @@ int isPageInMem(int pageNum) {
 struct page *findPageInMem(int pageNum);
 
 struct page *findOptimalPage(int anchorNum) {
-
+    printf("finding optimal page with anchor %d",anchorNum);
     struct page *optimalPage;
     int optimalPageNum;
     do {
         optimalPageNum = rand() % input->n + 1;
         optimalPage = findPageInMem(optimalPageNum);
     } while (optimalPage == NULL || optimalPageNum == anchorNum);
+    printf("returning %d page",optimalPage->pageNum);
     return optimalPage;
 }
 
@@ -339,6 +327,7 @@ void freeBlock(struct block *physBlock) {
 }
 
 void loadPageFromMemToDisk(int anchorPage) {
+    printf("load paga %d from mem to disk",anchorPage);
     struct page *pageToUnload = findOptimalPage(anchorPage);
     struct block *firstBlock = pageToUnload->firstBlock;
     int pageNum = pageToUnload->pageNum;
@@ -351,6 +340,7 @@ void loadPageFromMemToDisk(int anchorPage) {
     table[pageNum].isAvailable = '0';
     table[pageNum].physBlockAddr = -1;
     freeBlock(firstBlock);
+    printf("exit load page from mem to disk");
 
 }
 
@@ -359,7 +349,7 @@ struct page *findPageInMem(int pageNum) {
     if (current->pageNum == pageNum && current->next == NULL)
         return current;
     int pageInMemCount = 0;
-    while (pageInMemCount < MAX_NUM_OF_PAGES_IN_RAM) {
+    while (pageInMemCount <  MAX_MEM_SIZE/input->szPage) {
         if (table[current->pageNum].isAvailable == '1') {
 
             pageInMemCount++;
@@ -390,7 +380,7 @@ struct page *findFreePage(int usingSize) {
 }
 
 int loadPageToMem(int pageNum) {
-    printf("loading page to mem\n");
+    printf("loading page %d to mem\n",pageNum);
     struct diskCell *cell = findDiskCell(&memDisk, pageNum);
     if (cell == NULL)
         return UNKNOWN_MISTAKE;
@@ -457,7 +447,7 @@ int readFromPage(struct page *currPage, void *pBuffer, int offset) {
 }
 
 void initPhysMem() {
-    int memSize = (MAX_NUM_OF_PAGES_IN_RAM * MAX_PAGE_SIZE) / input->szPage;
+    int memSize = (MAX_SIZE) / input->szPage;
     memory = (struct block *) malloc(memSize * sizeof(struct block));
 
     memory->next = NULL;
@@ -472,7 +462,7 @@ void initPhysMem() {
 int checkInitArguments(int n, int szPage) {
     if (n < 0 || isSzPageValid(szPage) != SUCCESS)
         return WRONG_ARGUMENTS;
-    if (n > MAX_NUM_OF_PAGES || szPage > MAX_PAGE_SIZE || n * szPage > MAX_SIZE)
+    if (n >  MAX_MEM_SIZE/input->szPage || szPage > MAX_PAGE_SIZE || n * szPage > MAX_SIZE)
         return MEMORY_LACK;
     return SUCCESS;
 }
@@ -485,7 +475,7 @@ void saveInput(int n, int szPage) {
 }
 
 int createBlocks() {
-    int poolSize = MAX_NUM_OF_PAGES_IN_RAM;
+    int poolSize = MAX_MEM_SIZE/input->szPage;
 
     for (int blockCount = 1; blockCount < poolSize; blockCount++) {
 
@@ -508,6 +498,9 @@ int _init(int n, int szPage) {
     int createBlocksStatus = createBlocks();
     if (createBlocksStatus != SUCCESS)
         return createBlocksStatus;
+    int pagesInMem = n;
+    if (n > MAX_MEM_SIZE/input->szPage)
+        pagesInMem = MAX_MEM_SIZE/input->szPage;
 
     virtualPages = (struct page *) malloc(n * sizeof(struct page));
     virtualPages->next = NULL;

@@ -3,9 +3,8 @@
 
 
 #define MAX_SIZE 32768
-#define MAX_MEM_SIZE 40
-#define MAX_NUM_OF_PAGES 1000
-#define MAX_PAGE_SIZE 4
+#define MAX_MEM_SIZE 64
+#define MAX_PAGE_SIZE 16
 
 #define SUCCESS 0
 #define WRONG_ARGUMENTS -1
@@ -40,6 +39,7 @@ struct diskCell {
     struct page pageOnDisk;
     char *data;
     int usedSize;
+    char isReserved;
     int pageNum;
 };
 struct userInput {

@@ -7,12 +7,26 @@
 void read_11bytes14bytesWrite_successReturned(){
     _init(10,4);
     VA addr;
+    _malloc(&addr,10);
     _malloc(&addr,20);
     char *buff = calloc(11*sizeof(char),11*sizeof(char));
     assert(_write(addr,"teststring1234",14) == SUCCESS);
     addr+=2;
     assert(_read(addr,buff,11)==SUCCESS);
     printf("%s\n",buff);
+
+}
+void complex_test(){
+    _init(15,4);
+    VA addr;
+    _malloc(&addr,60);
+    _malloc(&addr,10);
+
+    char *buff = calloc(11*sizeof(char),11*sizeof(char));
+    assert(_write(addr,"teststring1234",14) == SUCCESS);
+    addr+=5;
+    assert(_read(addr,buff,3)==SUCCESS);
+    printf("\n%s\n",buff); //tri
 
 }
 void read_5bytesFromDiskedPage_successReturned(){
@@ -63,5 +77,6 @@ void run_read_tests(){
     read_incorrectAddr_wrongArgsReturned();
    read_5bytesFromDiskedPage_successReturned();
     read_3bytes4bytesWrite_successReturned();
-    //read_20bytes5bytesWrite_memLackReturned();
+    read_20bytes5bytesWrite_memLackReturned();
+    //complex_test();
 }

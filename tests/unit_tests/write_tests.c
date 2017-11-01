@@ -8,6 +8,8 @@ void write_6bytes6bytesMalloc_successReturned() {
     _init(10, 4);
     VA addr;
     _malloc(&addr, 6);
+    _malloc(&addr, 16);
+    _malloc(&addr, 11);
     assert(_write(addr, "lolkek", 6) == SUCCESS);
   //  freeGlobalVars();
 }
@@ -32,7 +34,9 @@ void write_23bytes16bytesMalloc_unknownMistakeReturned() {
 void write_3bytes16Malloc_successReturned() {
     _init(25, 4);
     VA addr;
-    _malloc(&addr, 16);
+    _malloc(&addr, 50);
+    _malloc(&addr, 14);
+    addr+=10;
     assert(_write(addr, "lol", 3) == SUCCESS);
 }
 void write_in_not_malloced_unknownMistakeReturned() {
@@ -52,7 +56,6 @@ void write_twice_successReturned() {
     _write(addr, "lol", 3);
     assert(_write(addr, "kek", 3) == SUCCESS);
 
-    //freeGlobalVars();
 }
 
 void run_write_tests() {

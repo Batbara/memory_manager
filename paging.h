@@ -2,9 +2,9 @@
 #define MEMORY_MANAGER_PAGING_H
 
 
-#define MAX_SIZE 32768
-#define MAX_MEM_SIZE 64
-#define MAX_PAGE_SIZE 16
+#define MAX_SIZE 655360
+#define MAX_MEM_SIZE 32768
+#define MAX_PAGE_SIZE 32768
 
 #define SUCCESS 0
 #define WRONG_ARGUMENTS -1

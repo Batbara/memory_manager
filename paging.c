@@ -289,19 +289,32 @@ struct page *findPageInMem(int pageNum);
 
 struct page *findOptimalPage(int anchorNum) {
     printf("finding optimal page with anchor %d\n", anchorNum);
-    struct page *optimalPage = NULL;
-    int optimalPageNum = -1;
-    do {
-        optimalPageNum = rand() % input->n + 1;
-        int isInMem = isPageInMem(optimalPageNum);
-        if (isInMem != SUCCESS) {
-            continue;
-        } else {
-            optimalPage = findPageInMem(optimalPageNum);
-            printf("returning %d page\n", optimalPage->pageNum);
-            return optimalPage;
+//    struct page *optimalPage = NULL;
+//    int optimalPageNum = -1;
+    struct page *current = virtualPages->next;
+    // int pageInMemCount = 0;
+    while (current->next != NULL) {
+        if (table[current->pageNum].isAvailable == '1') {
+            if (current->pageNum == anchorNum) {
+                continue;
+            } else
+                return current;
         }
-    } while (1);
+        current = current->next;
+    };
+    return NULL;
+    /* do {
+         optimalPageNum = rand() % input->n + 1;
+         int isInMem = isPageInMem(optimalPageNum);
+         if (isInMem != SUCCESS) {
+             continue;
+         } else {
+             optimalPage = findPageInMem(optimalPageNum);
+             printf("returning %d page\n", optimalPage->pageNum);
+             return optimalPage;
+         }
+     } while (1);*/
+
 }
 
 void freeBlock(struct block *physBlock) {
@@ -331,6 +344,8 @@ void copyDataToDisk(struct page *pageToUnload) {
 struct block *unloadBlockInMem(int anchorPage) {
     printf("unloading block for page %d\n", anchorPage);
     struct page *pageToUnload = findOptimalPage(anchorPage);
+    if (pageToUnload == NULL)
+        return NULL;
     copyDataToDisk(pageToUnload);
 
     table[pageToUnload->pageNum].isAvailable = '0';
@@ -402,6 +417,9 @@ int loadPageToMem(int pageNum) {
     struct block *freeBlock = findFreeBlock();
     if (freeBlock == NULL) {
         freeBlock = unloadBlockInMem(pageNum);
+        if (freeBlock == NULL) {
+            return UNKNOWN_MISTAKE;
+        }
 
     }
     pageToLoad->firstBlock = freeBlock;
@@ -566,7 +584,7 @@ int _malloc(VA *ptr, size_t mallocSize) {
     int pagesToAlloc = (int) ceil((double) mallocSize / input->szPage);
     for (int pageNum = firstPageNum; pageNum < firstPageNum + pagesToAlloc; pageNum++) {
         int allocatedStaus = isPageAllocated(pageNum);
-        if(allocatedStaus == SUCCESS){
+        if (allocatedStaus == SUCCESS) {
             return UNKNOWN_MISTAKE;
         }
         int freeSizeInPage = getPage(pageNum)->freeSize;
@@ -593,7 +611,7 @@ int _malloc(VA *ptr, size_t mallocSize) {
                 newPage->firstBlock = firstBlock;
                 newPage->freeSize -= sizeToAlloc;
             } else return status;
-        } else{
+        } else {
             struct diskCell *cell = findDiskCell(&memDisk, pageNum);
             cell->isReserved = '1';
             newPage->isUsed = '1';

@@ -1,26 +1,24 @@
 #include <stdio.h>
-#include <malloc.h>
-#include <mem.h>
-#include <math.h>
-#include "mmemory.h"
-#include "paging.h"
 #include "tests/unit_tests/init_tests.h"
 #include "tests/unit_tests/malloc_tests.h"
 #include "tests/unit_tests/free_tests.h"
 #include "tests/unit_tests/read_tests.h"
 #include "tests/unit_tests/write_tests.h"
-#include "tests/load_tests.h"
 
 int main() {
-//   run_init_tests();
-//  run_malloc_tests();
+
+    run_init_tests();
+    printf("passed init tests\n");
+    run_malloc_tests();
+    printf("passed malloc tests\n");
     run_free_tests();
-//    run_write_tests();
-//   run_read_tests();
-  //  testPageNum();
-//    testPageSize();
-    //testPageSize();
-    //testPageNum();
+    printf("passed free tests\n");
+    run_write_tests();
+    printf("passed write tests\n");
+
+    printf("\nread results:\n");
+    run_read_tests();
+    printf("passed read tests\n");
 
 
 }

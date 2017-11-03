@@ -17,7 +17,6 @@ struct block {
     int address;
     char *data;
     char isUsed;
-    char writeStatus;
     int usedSize;
     int blockSize;
 };
@@ -45,7 +44,6 @@ struct diskCell {
 struct userInput {
     int n;
     int szPage;
-    int system_constant;
 };
  struct block *memory;
  struct page *virtualPages;
@@ -53,31 +51,7 @@ struct userInput {
  struct diskCell *memDisk;
  struct userInput *input;
 
-int findBlockAddr(VA ptr);
-void freeGlobalVars();
-/*int convertToDecimal(VA addressToConvert);
+void freeAll();
 
-int pushPage(struct page **head, struct page *pageToPush);
-int allocateBlocks(struct block **firstBlock, VA *addressesToAlloc, int size);
-struct page *createPage(int addrOffset, struct block **memoryPool);
-struct pageInfo createPageInfo(int physBlockAddr, int addrOffset);
-int isAddressValid(VA ptr);
-VA *getPhysAddrPool(VA firstVA, VA lastVA);
-int getPageNumberFromVA(VA address);
-VA getVAoffset(VA address);
-VA findBlockAddr(VA ptr);
-VA *VApool(VA *ptr, size_t blockSize);
-int isPageAvailable(int pageNum);
-void saveInput(int n, int szPage);
-int createBlocks();
-int freeBlock(VA addr);
-int writeToBlock(VA blockAddr, void *pBuffer);
-int readFromPage(VA blockAddr, void *pBuffer, size_t size);
-void initPhysMem();
-int checkInitArguments(int n, int szPage);
-struct diskCell *createDiskCell(struct page thePage, int addrOffset);
-int pushDiskCell(struct diskCell **head, struct diskCell *cellToPush);
-int loadPageToMem(int pageNum);
-struct page *findPageInMem(int pageNum);*/
-#endif //MEMORY_MANAGER_PAGING_H
+#endif
 

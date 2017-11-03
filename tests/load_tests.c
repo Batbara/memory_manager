@@ -3,26 +3,6 @@
 #include "../paging.h"
 #include "load_tests.h"
 
-void testAddrCalculation() {
-    FILE *fp;
-    clock_t timer;
-    fp = fopen("C:\\Users\\Barbarossa\\Documents\\memory_manager\\testAddrCalculation.txt", "w+");
-
-    fprintf(fp, "Testing address calculation\n");
-    _init(10, 128);
-    for (int addr = 0; addr < 1000; addr += 100) {
-        fprintf(fp, "%d ", addr);
-
-        timer = clock();
-        findBlockAddr((VA)addr);
-        timer = clock() - timer;
-        float time = ((float) timer) / CLOCKS_PER_SEC * 10000;
-        fprintf(fp, "%f\n", time);
-    }
-
-    fclose(fp);
-}
-
 void testPageSize() {
     FILE *fp;
     clock_t timer;

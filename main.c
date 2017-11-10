@@ -13,10 +13,8 @@
 
 int main() {
 
-    //testPageNum();
+    testPageNum();
     testPageSize();
-    //testPageSize();
-    //testPageNum();
 
 
 }

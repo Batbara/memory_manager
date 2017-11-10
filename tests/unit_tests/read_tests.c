@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <>
 #include "../../mmemory.h"
 #include "../../paging.h"
 
@@ -11,9 +12,9 @@ void read_11_from_14_written_successReturned() {
     _malloc(&addr, 20);
     char *buff = calloc(11 * sizeof(char), 11 * sizeof(char));
 
-    _write(addr, "teststring1234", 14);
-    addr += 2;
-    assert(_read(addr, buff, 11) == SUCCESS);
+    _write(addr+2, "teststring1234", 14);
+
+    assert(_read(addr+4, buff, 11) == SUCCESS);
     printf("%s\n", buff);
 
     free(buff);
@@ -21,7 +22,7 @@ void read_11_from_14_written_successReturned() {
 
 }
 
-void read_with_page_loading_successReturned() {
+void read_5_from_14_written_with_offset_successReturned() {
     _init(20, 4);
     VA addr;
     _malloc(&addr, 80);
@@ -80,10 +81,10 @@ void read_20_from_5_written_memLackReturned() {
 
 void run_read_tests() {
 
-    read_incorrectAddr_wrongArgsReturned();
-    read_20_from_5_written_memLackReturned();
+//    read_incorrectAddr_wrongArgsReturned();
+//    read_20_from_5_written_memLackReturned();
     read_11_from_14_written_successReturned();
-    read_with_page_loading_successReturned();
-    read_3_with_4_written_successReturned();
+//    read_5_from_14_written_with_offset_successReturned();
+//    read_3_with_4_written_successReturned();
 
 }
